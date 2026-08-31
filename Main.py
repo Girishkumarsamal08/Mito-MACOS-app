@@ -105,14 +105,29 @@ def MainExecution():
     update_label(f"{Query}")
     
     sleep_phrases = ["stop listening", "go to sleep", "you can sleep", "sleep baby", "good night", "sleep now"]
+    screen_phrases = ["what am i doing", "see my screen", "look at my screen", "check my screen", "what i m doing", "what i am doing", "screen", "what am i working on", "see screen"]
+    
     if any(phrase in Query.lower() for phrase in sleep_phrases):
-        sleep_response = "Good night! I'm going to sleep now. Just call me when you need me."
+        sleep_response = "Good night Master! I'm going to sleep now. Just call me when you need me."
         core_engine.speaking()
         update_state("Speaking")
         TextToSpeech(sleep_response)
         core_engine.idle()
         update_state("Sleeping")
         update_label("Sleeping")
+        return True
+    elif any(phrase in Query.lower() for phrase in screen_phrases):
+        from BACKEND.VisionEngine import analyze_screen
+        core_engine.thinking()
+        update_state("Thinking")
+        update_label("Looking at screen...")
+        Answer = analyze_screen(Query)
+        core_engine.speaking()
+        update_state("Speaking")
+        update_label("Speaking")
+        TextToSpeech(Answer)
+        core_engine.idle()
+        update_state("Idle")
         return True
     core_engine.thinking()
     update_state("Thinking")

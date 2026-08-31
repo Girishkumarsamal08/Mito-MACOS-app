@@ -1,10 +1,10 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QStyle, QGraphicsView, QGraphicsScene
-from PyQt5.QtGui import QFont, QIcon, QPixmap
-from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtMultimediaWidgets import QGraphicsVideoItem
-from PyQt5.QtCore import Qt, QUrl, QSizeF
+import cv2
+import numpy as np
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage
+from PyQt5.QtCore import Qt, QTimer
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -12,6 +12,9 @@ project_root = os.path.dirname(current_dir)
 class SiriStyleOverlay(QWidget):
     def __init__(self):
         super().__init__()
+        self.cap = None
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_video_frame)
         self.init_ui()
 
     def init_ui(self):
@@ -38,36 +41,23 @@ class SiriStyleOverlay(QWidget):
         screen_geometry = QApplication.primaryScreen().geometry()
         self.move(screen_geometry.width() - self.width() - 30, 30)
 
+        self.video_label = QLabel(self)
+        self.video_label.setGeometry(0, 0, 420, 420)
+        self.video_label.setStyleSheet("background: transparent; border: none;")
+        self.video_label.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.video_label.setAlignment(Qt.AlignCenter)
+
         self.label = QLabel("Hey Mito", self)
         self.label.setStyleSheet("background: transparent; color: white;")
-        self.label.raise_()
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setGeometry(20, 16, self.width() - 90, 40)
-
-        # Transparent video scene
-        self.scene = QGraphicsScene(self)
-        self.view = QGraphicsView(self.scene, self)
-        self.view.setGeometry(0, 0, 420, 420)
-        self.view.setStyleSheet("background: transparent; border:none;")
-        self.view.setFrameShape(QGraphicsView.NoFrame)
-        self.view.setAttribute(Qt.WA_TranslucentBackground, True)
-
-        self.video_item = QGraphicsVideoItem()
-        self.video_item.setSize(QSizeF(420,420))
-        self.scene.addItem(self.video_item)
-
-        self.player = QMediaPlayer(self)
-        self.player.setVideoOutput(self.video_item)
-        self.player.setMuted(True)
-        self.player.mediaStatusChanged.connect(self.handle_loop)
+        self.label.raise_()
 
         # Default state
         self.set_state("Idle")
 
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setAutoFillBackground(False)
-        self.view.lower()
-        self.label.raise_()
         self.show()
 
     def set_state(self, state):
@@ -82,14 +72,38 @@ class SiriStyleOverlay(QWidget):
             print(f"Video not found: {video_path}")
             return
 
-        self.player.setMedia(QMediaContent(QUrl.fromLocalFile(video_path)))
-        self.player.play()
+        if self.cap:
+            self.cap.release()
 
-    def handle_loop(self, status):
-        from PyQt5.QtMultimedia import QMediaPlayer
-        if status == QMediaPlayer.EndOfMedia:
-            self.player.setPosition(0)
-            self.player.play()
+        self.cap = cv2.VideoCapture(video_path)
+        if not self.timer.isActive():
+            self.timer.start(40)  # ~25 fps
+
+    def update_video_frame(self):
+        if not self.cap or not self.cap.isOpened():
+            return
+
+        ret, frame = self.cap.read()
+        if not ret:
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            ret, frame = self.cap.read()
+
+        if ret:
+            img = frame.astype(np.float32) / 255.0
+            b, g, r = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+            max_rb = np.maximum(r, b)
+            green_diff = g - max_rb
+            val = np.clip((green_diff - 0.05) / (0.15 - 0.05), 0.0, 1.0)
+            smooth_val = val * val * (3.0 - 2.0 * val)
+            alpha = 1.0 - smooth_val
+            new_g = np.minimum(g, max_rb)
+            clean_g = np.where(green_diff > 0.0, new_g, g)
+            rgba = (np.dstack((r, clean_g, b, alpha)) * 255).astype(np.uint8)
+
+            h, w, ch = rgba.shape
+            qimg = QImage(rgba.data, w, h, w * ch, QImage.Format_RGBA8888)
+            pixmap = QPixmap.fromImage(qimg).scaled(420, 420, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.video_label.setPixmap(pixmap)
 
     def update_text(self, new_text):
         self.label.setText(new_text)

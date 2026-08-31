@@ -2,35 +2,35 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var stateStore = MITOStateStore.shared
+    @State private var isHovered = false
     
     var body: some View {
         ZStack(alignment: .top) {
             Color.clear
             
-            VStack(spacing: 8) {
-                // Status pill overlay
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(connectionColor)
-                        .frame(width: 8, height: 8)
-                    
-                    Text(stateStore.statusMessage)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: .black.opacity(0.8), radius: 2, x: 0, y: 1)
+            VStack(spacing: 0) {
+                // Status pill overlay (shows on hover or when disconnected/error)
+                if isHovered || !stateStore.isConnected || stateStore.currentState == .error {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(connectionColor)
+                            .frame(width: 7, height: 7)
+                        
+                        Text(stateStore.statusMessage)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(Color.black.opacity(0.65))
+                    )
+                    .padding(.top, 8)
+                    .transition(.opacity)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Color.black.opacity(0.55))
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                )
-                .padding(.top, 16)
-                .zIndex(2)
+                
+                Spacer()
                 
                 // Character animation container
                 CharacterView()
@@ -39,6 +39,11 @@ struct ContentView: View {
         }
         .frame(width: 420, height: 440)
         .background(Color.clear)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
     }
     
     private var connectionColor: Color {
@@ -47,7 +52,7 @@ struct ContentView: View {
         }
         switch stateStore.currentState {
         case .listening: return .green
-        case .thinking: return .purple
+        case .thinking: return .cyan
         case .speaking: return .blue
         case .error: return .red
         case .sleeping: return .gray

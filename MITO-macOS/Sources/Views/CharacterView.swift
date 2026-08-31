@@ -1,30 +1,45 @@
 import SwiftUI
-import AVKit
 import AVFoundation
 import CoreImage
+
+class TransparentVideoView: NSView {
+    let playerLayer = AVPlayerLayer()
+    
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.wantsLayer = true
+        self.layer?.backgroundColor = NSColor.clear.cgColor
+        self.layer?.isOpaque = false
+        
+        playerLayer.backgroundColor = NSColor.clear.cgColor
+        playerLayer.isOpaque = false
+        playerLayer.videoGravity = .resizeAspect
+        self.layer?.addSublayer(playerLayer)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        playerLayer.frame = self.bounds
+    }
+}
 
 struct CharacterVideoPlayerView: NSViewRepresentable {
     let videoName: String
     
-    func makeNSView(context: Context) -> AVPlayerView {
-        let playerView = AVPlayerView()
-        playerView.controlsStyle = .none
-        playerView.showsFrameSteppingButtons = false
-        playerView.showsSharingServiceButton = false
-        playerView.showsFullScreenToggleButton = false
-        
-        playerView.wantsLayer = true
-        playerView.layer?.backgroundColor = NSColor.clear.cgColor
-        
+    func makeNSView(context: Context) -> TransparentVideoView {
+        let view = TransparentVideoView()
         let player = AVQueuePlayer()
-        playerView.player = player
-        
+        view.playerLayer.player = player
         context.coordinator.setupPlayer(player: player, videoName: videoName)
-        return playerView
+        return view
     }
     
-    func updateNSView(_ nsView: AVPlayerView, context: Context) {
-        if let player = nsView.player as? AVQueuePlayer {
+    func updateNSView(_ nsView: TransparentVideoView, context: Context) {
+        if let player = nsView.playerLayer.player as? AVQueuePlayer {
             context.coordinator.updateVideo(player: player, videoName: videoName)
         }
     }
@@ -77,12 +92,13 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
             let composition = AVVideoComposition(asset: asset) { request in
                 let source = request.sourceImage
                 let kernel = CIColorKernel(source:
-                    "kernel vec4 makeBlackTransparent(__sample s) {" +
-                    "  float maxRGB = max(s.r, max(s.g, s.b));" +
-                    "  if (maxRGB < 0.12) {" +
-                    "    return vec4(0.0, 0.0, 0.0, 0.0);" +
-                    "  }" +
-                    "  return s;" +
+                    "kernel vec4 removeGreenBackground(__sample s) {" +
+                    "  float maxRB = max(s.r, s.b);" +
+                    "  float greenDiff = s.g - maxRB;" +
+                    "  float alpha = 1.0 - smoothstep(0.05, 0.15, greenDiff);" +
+                    "  float newG = min(s.g, maxRB);" +
+                    "  vec3 cleanRGB = mix(vec3(s.r, newG, s.b), s.rgb, alpha);" +
+                    "  return vec4(cleanRGB * alpha, alpha * s.a);" +
                     "}"
                 )
                 if let output = kernel?.apply(extent: source.extent, arguments: [source]) {

@@ -152,9 +152,13 @@ def CloseApp(app):
         pass
     else:
         try:
-            os.close(app,match_closest=True,output=True,throw_error=True)
+            cmd = f'tell application "{app}" to quit'
+            result = subprocess.run(["osascript", "-e", cmd], capture_output=True)
+            if result.returncode == 0:
+                return True
+            subprocess.run(["pkill", "-f", app])
             return True
-        except:
+        except Exception:
             return False
         
 def System(command):

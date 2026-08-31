@@ -61,7 +61,7 @@ ChatHistory = [
 def FirstLayerDMM(prompt: str = "test"):
     try:
         response_obj = co.chat(
-            model="command-r",
+            model="command-r-08-2024",
             messages=[
                 {"role": "system", "content": preamble},
                 {"role": "user", "content": prompt}

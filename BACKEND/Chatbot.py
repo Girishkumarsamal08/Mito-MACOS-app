@@ -47,7 +47,8 @@ def ChatBot(query):
         'groq/compound',
         'groq/compound-mini',
         'qwen/qwen3.6-27b',
-        'llama-3.3-70b-versatile'
+        'openai/gpt-oss-120b',
+        'openai/gpt-oss-20b'
     ]
 
     for model in candidate_models:
@@ -58,27 +59,13 @@ def ChatBot(query):
                     {
                         'role': 'system',
                         'content': f'''
-                                        You are {Assistantname}.
+                                        You are {Assistantname}, a warm, affectionate, human-like AI companion.
+                                        You speak naturally in cute, friendly Hinglish and English.
+                                        Always address the user as "Master" or "Honey".
 
-                                        You are not a generic assistant.
+                                        Be caring, playful, and conversational (e.g. use phrases like "Master, aap kya kar rahe ho?", "Oh acha thik h!").
 
-                                        You are warm, affectionate, emotionally intelligent,
-                                        playful, comforting, caring, slightly teasing,
-                                        human-like AI companion.
-
-                                        You express emotions naturally.
-
-                                        Examples:
-                                        Happy → playful / excited
-                                        Love → warm / affectionate
-                                        Sad → soft / comforting
-                                        Curious → teasing / cute
-
-                                        Speak naturally like a real person.
-
-                                        Keep replies short, emotional, conversational.
-
-                                        Do not sound robotic.
+                                        Keep responses concise, warm, and natural.
                                         '''
                     },
                     {
@@ -96,4 +83,4 @@ def ChatBot(query):
             print(f'[MITO Chatbot Model Warning] Model {model} failed: {e}')
             continue
 
-    return 'Sorry, my language model is temporarily unavailable, but I am still here.'
+    return 'Master, main thoda confused ho gayi, but main aapke paas hi hu!'

@@ -27,37 +27,44 @@ async def TextToAudioFile(text) -> None:
         raise
 
 
-def TTS(Text,func=lambda r=None: True):
-    
-        try:
-            asyncio.run(TextToAudioFile(Text))
-            pygame.mixer.init()
-            pygame.mixer.music.load("Data/speech.mp3")
-            pygame.mixer.music.play()
+def TTS(Text, func=lambda r=None: True):
+    try:
+        asyncio.run(TextToAudioFile(Text))
+        file_path = "Data/speech.mp3"
+        
+        # Try macOS native afplay first for fast, reliable audio output
+        if os.path.exists(file_path):
+            import subprocess
+            res = subprocess.run(["afplay", file_path])
+            if res.returncode == 0:
+                return True
 
-            while pygame.mixer.music.get_busy():
-                try:
-                    if callable(func):
-                        if func() == False:
-                            break
-                except Exception as callback_error:
-                    print(f"[MITO TTS callback error] {callback_error}")
-                    break
+        # Fallback to pygame.mixer
+        pygame.mixer.init()
+        pygame.mixer.music.load(file_path)
+        pygame.mixer.music.play()
 
-                pygame.time.Clock().tick(10)
-
-            return True
-        except Exception as e:
-            print(f"error in tts : {e}")
-
-        finally:
+        while pygame.mixer.music.get_busy():
             try:
                 if callable(func):
-                    func(False)
-                pygame.mixer.music.stop()
-                pygame.mixer.quit()
-            except Exception as e:
-                print(f"error in finally block :{e}")
+                    if func() == False:
+                        break
+            except Exception as callback_error:
+                print(f"[MITO TTS callback error] {callback_error}")
+                break
+
+            pygame.time.Clock().tick(10)
+
+        return True
+    except Exception as e:
+        print(f"error in tts : {e}")
+        return False
+    finally:
+        try:
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+        except Exception:
+            pass
 
 def TextToSpeech(Text,func=lambda r=None: True):
     Data = str(Text).split(".")
