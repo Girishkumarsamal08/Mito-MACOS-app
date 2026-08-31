@@ -91,14 +91,10 @@ class SiriStyleOverlay(QWidget):
         if ret:
             img = frame.astype(np.float32) / 255.0
             b, g, r = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-            max_rb = np.maximum(r, b)
-            green_diff = g - max_rb
-            val = np.clip((green_diff - 0.05) / (0.15 - 0.05), 0.0, 1.0)
-            smooth_val = val * val * (3.0 - 2.0 * val)
-            alpha = 1.0 - smooth_val
-            new_g = np.minimum(g, max_rb)
-            clean_g = np.where(green_diff > 0.0, new_g, g)
-            rgba = (np.dstack((r, clean_g, b, alpha)) * 255).astype(np.uint8)
+            max_rgb = np.maximum(r, np.maximum(g, b))
+            val = np.clip((max_rgb - 0.003) / (0.02 - 0.003), 0.0, 1.0)
+            alpha = val * val * (3.0 - 2.0 * val)
+            rgba = (np.dstack((r, g, b, alpha)) * 255).astype(np.uint8)
 
             h, w, ch = rgba.shape
             qimg = QImage(rgba.data, w, h, w * ch, QImage.Format_RGBA8888)

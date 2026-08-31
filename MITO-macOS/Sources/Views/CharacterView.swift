@@ -92,13 +92,10 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
             let composition = AVVideoComposition(asset: asset) { request in
                 let source = request.sourceImage
                 let kernel = CIColorKernel(source:
-                    "kernel vec4 removeGreenBackground(__sample s) {" +
-                    "  float maxRB = max(s.r, s.b);" +
-                    "  float greenDiff = s.g - maxRB;" +
-                    "  float alpha = 1.0 - smoothstep(0.05, 0.15, greenDiff);" +
-                    "  float newG = min(s.g, maxRB);" +
-                    "  vec3 cleanRGB = mix(vec3(s.r, newG, s.b), s.rgb, alpha);" +
-                    "  return vec4(cleanRGB * alpha, alpha * s.a);" +
+                    "kernel vec4 removeBlackBackground(__sample s) {" +
+                    "  float maxRGB = max(s.r, max(s.g, s.b));" +
+                    "  float alpha = smoothstep(0.003, 0.02, maxRGB);" +
+                    "  return vec4(s.rgb * alpha, alpha * s.a);" +
                     "}"
                 )
                 if let output = kernel?.apply(extent: source.extent, arguments: [source]) {
