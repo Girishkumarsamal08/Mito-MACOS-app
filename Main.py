@@ -97,9 +97,16 @@ def MainExecution():
     from FRONTEND.GUI import update_label
     update_label(f"{Query}")
     
-    if "stop listening" in Query.lower():
-        update_label("Stopped listening")
-        return False
+    sleep_phrases = ["stop listening", "go to sleep", "you can sleep", "sleep baby", "good night", "sleep now"]
+    if any(phrase in Query.lower() for phrase in sleep_phrases):
+        sleep_response = "Good night! I'm going to sleep now. Just call me when you need me."
+        core_engine.speaking()
+        update_state("Speaking")
+        TextToSpeech(sleep_response)
+        core_engine.idle()
+        update_state("Sleeping")
+        update_label("Sleeping")
+        return True
     core_engine.thinking()
     update_state("Thinking")
     Decision = FirstLayerDMM(Query)
@@ -224,6 +231,11 @@ def SecondThread():
 # Correct main entry point
 if __name__ == "__main__":
     print("[MITO] Assistant started.")
+    try:
+        from BACKEND.BridgeServer import start_bridge_server_thread
+        start_bridge_server_thread()
+    except Exception as e:
+        print(f"[MITO BridgeServer Warning] {e}")
     core_engine.startup()
     threading.Thread(target=FirstThread, daemon=True).start()
     SecondThread()

@@ -97,6 +97,12 @@ class SiriStyleOverlay(QWidget):
     
 # Function to update the label of the existing overlay window
 def update_label(text):
+    try:
+        from BACKEND.BridgeServer import broadcast_state
+        broadcast_state("label", text)
+    except Exception:
+        pass
+
     if hasattr(QApplication, "instance") and QApplication.instance():
         for widget in QApplication.instance().allWidgets():
             if isinstance(widget, SiriStyleOverlay):
@@ -104,6 +110,12 @@ def update_label(text):
                 break
 
 def update_state(state):
+    try:
+        from BACKEND.BridgeServer import broadcast_state
+        broadcast_state(state)
+    except Exception:
+        pass
+
     app = QApplication.instance()
     if app:
         for widget in app.allWidgets():
