@@ -52,6 +52,10 @@ cat << 'EOF' > "$APP_DIR/Contents/Info.plist"
     <true/>
     <key>LSUIElement</key>
     <true/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>MITO requires microphone access to listen to your voice commands.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>MITO requires speech recognition to understand your voice commands.</string>
 </dict>
 </plist>
 EOF

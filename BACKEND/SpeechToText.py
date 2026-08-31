@@ -37,17 +37,13 @@ def SpeechRecognition():
     try:
         with sr.Microphone() as source:
             print("Listening...")
-
-            r.adjust_for_ambient_noise(source, duration=2)
-
-            r.dynamic_energy_threshold = True
             r.energy_threshold = 300
-            r.pause_threshold = 1
+            r.pause_threshold = 0.8
 
             audio = r.listen(
                 source,
-                timeout=15,
-                phrase_time_limit=12
+                timeout=5,
+                phrase_time_limit=8
             )
 
         print("Transcribing with Whisper...")

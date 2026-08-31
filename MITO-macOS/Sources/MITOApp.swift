@@ -44,6 +44,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         let process = Process()
         process.currentDirectoryURL = URL(fileURLWithPath: projectDir)
+        var env = ProcessInfo.processInfo.environment
+        env["PYTHONUNBUFFERED"] = "1"
+        process.environment = env
         
         if FileManager.default.fileExists(atPath: darlingPython) {
             process.executableURL = URL(fileURLWithPath: darlingPython)
