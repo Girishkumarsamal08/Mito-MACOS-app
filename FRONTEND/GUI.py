@@ -18,6 +18,10 @@ class SiriStyleOverlay(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        logo_path = os.path.join(project_root, "Resources", "APP_LOGO.png")
+        if os.path.exists(logo_path):
+            self.setWindowIcon(QIcon(logo_path))
+
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setStyleSheet("""

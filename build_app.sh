@@ -16,8 +16,40 @@ mkdir -p "$APP_DIR/Contents/Resources"
 cp "$BUILD_BIN" "$APP_DIR/Contents/MacOS/MITO"
 chmod +x "$APP_DIR/Contents/MacOS/MITO"
 
-echo "=== Copying Character Resource Videos & AppIcon ==="
+echo "=== Copying Character Resource Videos & Generating AppIcon ==="
 cp ../Resources/*.mp4 "$APP_DIR/Contents/Resources/"
+
+if [ -f "../Resources/APP_LOGO.png" ]; then
+    echo "Generating AppIcon.icns from APP_LOGO.png..."
+    python3 -c "
+import os, subprocess
+from PIL import Image
+
+logo_path = '../Resources/APP_LOGO.png'
+iconset_dir = '../Resources/AppIcon.iconset'
+icns_path = '../Resources/AppIcon.icns'
+
+os.makedirs(iconset_dir, exist_ok=True)
+img = Image.open(logo_path).convert('RGBA')
+
+w, h = img.size
+max_dim = max(w, h)
+square_img = Image.new('RGBA', (max_dim, max_dim), (0, 0, 0, 0))
+square_img.paste(img, ((max_dim - w) // 2, (max_dim - h) // 2))
+
+sizes = [16, 32, 64, 128, 256, 512, 1024]
+for s in sizes:
+    resized = square_img.resize((s, s), Image.LANCZOS)
+    resized.save(os.path.join(iconset_dir, f'icon_{s}x{s}.png'))
+    if s <= 512:
+        resized_2x = square_img.resize((s * 2, s * 2), Image.LANCZOS)
+        resized_2x.save(os.path.join(iconset_dir, f'icon_{s}x{s}@2x.png'))
+
+subprocess.run(['iconutil', '-c', 'icns', iconset_dir, '-o', icns_path], capture_output=True)
+subprocess.run(['rm', '-rf', iconset_dir])
+"
+fi
+
 if [ -f "../Resources/AppIcon.icns" ]; then
     cp "../Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/"
 fi
