@@ -16,8 +16,11 @@ mkdir -p "$APP_DIR/Contents/Resources"
 cp "$BUILD_BIN" "$APP_DIR/Contents/MacOS/MITO"
 chmod +x "$APP_DIR/Contents/MacOS/MITO"
 
-echo "=== Copying Character Resource Videos ==="
+echo "=== Copying Character Resource Videos & AppIcon ==="
 cp ../Resources/*.mp4 "$APP_DIR/Contents/Resources/"
+if [ -f "../Resources/AppIcon.icns" ]; then
+    cp "../Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/"
+fi
 
 echo "=== Creating Info.plist ==="
 cat << 'EOF' > "$APP_DIR/Contents/Info.plist"
@@ -29,6 +32,8 @@ cat << 'EOF' > "$APP_DIR/Contents/Info.plist"
     <string>en</string>
     <key>CFBundleExecutable</key>
     <string>MITO</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.mito.desktop.app</string>
     <key>CFBundleInfoDictionaryVersion</key>
