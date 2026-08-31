@@ -18,7 +18,9 @@ class SiriStyleOverlay(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        logo_path = os.path.join(project_root, "Resources", "APP_LOGO.png")
+        logo_path = os.path.join(project_root, "Resources", "logo.png")
+        if not os.path.exists(logo_path):
+            logo_path = os.path.join(project_root, "Resources", "APP_LOGO.png")
         if os.path.exists(logo_path):
             self.setWindowIcon(QIcon(logo_path))
 

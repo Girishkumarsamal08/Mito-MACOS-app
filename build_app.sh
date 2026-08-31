@@ -19,13 +19,13 @@ chmod +x "$APP_DIR/Contents/MacOS/MITO"
 echo "=== Copying Character Resource Videos & Generating AppIcon ==="
 cp ../Resources/*.mp4 "$APP_DIR/Contents/Resources/"
 
-if [ -f "../Resources/APP_LOGO.png" ]; then
-    echo "Generating AppIcon.icns from APP_LOGO.png..."
+if [ -f "../Resources/logo.png" ] || [ -f "../Resources/APP_LOGO.png" ]; then
+    echo "Generating AppIcon.icns from logo.png..."
     python3 -c "
 import os, subprocess
 from PIL import Image
 
-logo_path = '../Resources/APP_LOGO.png'
+logo_path = '../Resources/logo.png' if os.path.exists('../Resources/logo.png') else '../Resources/APP_LOGO.png'
 iconset_dir = '../Resources/AppIcon.iconset'
 icns_path = '../Resources/AppIcon.icns'
 
