@@ -87,11 +87,18 @@ def MainExecution():
     update_state("Listening")
     Query = SpeechRecognition()
 
+    if not Query or not Query.strip():
+        core_engine.idle()
+        update_state("Idle")
+        return True
+
     # ---------- AURA DECISION ----------
     aura_result = aura.evaluate(Query)
 
     # If AURA says reject or stay silent, do nothing
     if aura_result.reject or not aura_result.respond:
+        core_engine.idle()
+        update_state("Idle")
         return True
 
     from FRONTEND.GUI import update_label

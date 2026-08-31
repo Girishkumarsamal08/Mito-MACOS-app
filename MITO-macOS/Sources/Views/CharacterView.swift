@@ -1,6 +1,7 @@
 import SwiftUI
 import AVKit
 import AVFoundation
+import CoreImage
 
 struct CharacterVideoPlayerView: NSViewRepresentable {
     let videoName: String
@@ -56,11 +57,9 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
             
             var videoURL: URL? = nil
             
-            // First check bundle resources
             if let bundlePath = Bundle.main.path(forResource: videoName, ofType: "mp4") {
                 videoURL = URL(fileURLWithPath: bundlePath)
             } else {
-                // Fallback to development absolute path
                 let devPath = "/Users/girishkumarsamal/Downloads/MITO copy/Resources/\(videoName).mp4"
                 if FileManager.default.fileExists(atPath: devPath) {
                     videoURL = URL(fileURLWithPath: devPath)
@@ -72,7 +71,28 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
                 return
             }
             
-            let item = AVPlayerItem(url: url)
+            let asset = AVAsset(url: url)
+            let item = AVPlayerItem(asset: asset)
+            
+            let composition = AVVideoComposition(asset: asset) { request in
+                let source = request.sourceImage
+                let kernel = CIColorKernel(source:
+                    "kernel vec4 makeBlackTransparent(__sample s) {" +
+                    "  float maxRGB = max(s.r, max(s.g, s.b));" +
+                    "  if (maxRGB < 0.12) {" +
+                    "    return vec4(0.0, 0.0, 0.0, 0.0);" +
+                    "  }" +
+                    "  return s;" +
+                    "}"
+                )
+                if let output = kernel?.apply(extent: source.extent, arguments: [source]) {
+                    request.finish(with: output, context: nil)
+                } else {
+                    request.finish(with: source, context: nil)
+                }
+            }
+            item.videoComposition = composition
+            
             playerLooper = AVPlayerLooper(player: player, templateItem: item)
             player.play()
             currentVideoName = videoName
@@ -90,8 +110,6 @@ struct CharacterView: View {
             if stateStore.isVisible {
                 CharacterVideoPlayerView(videoName: stateStore.currentState.videoFileName)
                     .frame(width: 380, height: 380)
-                    .clipShape(Circle())
-                    .shadow(color: Color.purple.opacity(0.4), radius: 12, x: 0, y: 4)
                     .transition(.opacity)
             }
         }

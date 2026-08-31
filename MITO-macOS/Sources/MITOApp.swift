@@ -15,12 +15,15 @@ struct MITOApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var windowController: TransparentWindowController?
     var pythonProcess: Process?
+    var statusItem: NSStatusItem?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         let contentView = ContentView()
         let controller = TransparentWindowController(rootView: AnyView(contentView))
         controller.showWindow(nil)
         self.windowController = controller
+        
+        setupStatusItem()
         
         // Auto-launch Python backend if not already running
         launchPythonBackendIfNeeded()
@@ -29,6 +32,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         MITORuntimeBridge.shared.connect()
         
         print("[MITOApp] Native macOS Shell Launched Successfully.")
+    }
+    
+    private func setupStatusItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = statusItem?.button {
+            button.title = "MITO"
+        }
+        
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Wake MITO", action: #selector(wakeMITO), keyEquivalent: "w"))
+        menu.addItem(NSMenuItem(title: "Sleep MITO", action: #selector(sleepMITO), keyEquivalent: "s"))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Quit MITO", action: #selector(quitApp), keyEquivalent: "q"))
+        
+        statusItem?.menu = menu
+    }
+    
+    @objc func wakeMITO() {
+        MITORuntimeBridge.shared.sendCommand(action: "wake")
+    }
+    
+    @objc func sleepMITO() {
+        MITORuntimeBridge.shared.sendCommand(action: "sleep")
+    }
+    
+    @objc func quitApp() {
+        NSApplication.shared.terminate(nil)
     }
     
     private func launchPythonBackendIfNeeded() {
