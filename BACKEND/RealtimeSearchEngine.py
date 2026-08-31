@@ -72,15 +72,26 @@ def RealtimeSearchEngine(prompt):
    SystemChatBot.append({"role":"system","content": GoogleSearch(prompt)})
 
 
-   completion = client.chat.completions.create(
-        model = "llama3-70b-8192",
-        messages = SystemChatBot + [{"role": "system","content": Information()}] + messages,
-        temperature = 0.7,
-        max_tokens=2048,
-        top_p=1,
-            stream = True,
-            stop=None
-    )
+   candidate_models = ["groq/compound", "groq/compound-mini", "qwen/qwen3.6-27b"]
+   completion = None
+   for model in candidate_models:
+       try:
+           completion = client.chat.completions.create(
+               model = model,
+               messages = SystemChatBot + [{"role": "system","content": Information()}] + messages,
+               temperature = 0.7,
+               max_tokens=2048,
+               top_p=1,
+               stream = True,
+               stop=None
+           )
+           break
+       except Exception as e:
+           print(f"[MITO RealtimeSearchEngine Warning] Model {model} failed: {e}")
+           continue
+
+   if completion is None:
+       return "Sorry, I could not retrieve realtime information right now."
 
    Answer = ""
 

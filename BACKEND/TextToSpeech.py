@@ -1,52 +1,30 @@
 import pygame
 import random
 import asyncio
-import edge_tts
+ 
 import os
 from dotenv import dotenv_values
-from elevenlabs import ElevenLabs
 
 
 
 env_vars = dotenv_values(".env")
-api_key = env_vars.get("ELEVENLABS_API_KEY")
-Assistantvoice = env_vars.get("AssistantVoice")
-voice_name = env_vars.get("Voice")
-client = ElevenLabs(api_key= api_key)
-
-def speak(text, emotion="neutral"):
-    try:
-        if not api_key:
-            raise ValueError("ELEVENLABS_API_KEY is not set in .env")
-        audio = client.generate(text=text, voice=voice_name, model="eleven_monolingual_v1", stream=True)
-        client.play(audio)
-        voice_config = {
-            "angry": "Shouting",
-            "happy": "Cheerful",
-            "sad": "Sad",
-            "romantic": "Affectionate",
-            "neutral": "Default"
-        }
-
-        stability = 0.5
-        similarity_boost = 0.75
-        
-    except Exception as e:
-        print("error in tts:", e)
-    finally:
-        print("TTS completed.")
-
-
-
+Assistantvoice = env_vars.get("AssistantVoice") or "en-US-AriaNeural"
 
 async def TextToAudioFile(text) -> None:
-    file_path=r"Data\.mp3"
+    try:
+        from gtts import gTTS
 
-    if os.path.exists(file_path):
-        os.remove(file_path)
+        file_path = "Data/speech.mp3"
 
-    communicate = edge_tts.Communicate(text,Assistantvoice,pitch='+5Hz',rate='+13%')
-    await communicate.save(r"Data\speech.mp3")
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        tts = gTTS(text=text, lang="en")
+        tts.save(file_path)
+
+    except Exception as e:
+        print(f"[MITO TTS] Audio generation failed: {e}")
+        raise
 
 
 def TTS(Text,func=lambda r=None: True):
@@ -54,12 +32,18 @@ def TTS(Text,func=lambda r=None: True):
         try:
             asyncio.run(TextToAudioFile(Text))
             pygame.mixer.init()
-            pygame.mixer.music.load(r"Data\speech.mp3")
+            pygame.mixer.music.load("Data/speech.mp3")
             pygame.mixer.music.play()
 
             while pygame.mixer.music.get_busy():
-                if func() == False:
-                    break   
+                try:
+                    if callable(func):
+                        if func() == False:
+                            break
+                except Exception as callback_error:
+                    print(f"[MITO TTS callback error] {callback_error}")
+                    break
+
                 pygame.time.Clock().tick(10)
 
             return True
@@ -68,7 +52,8 @@ def TTS(Text,func=lambda r=None: True):
 
         finally:
             try:
-                func (False)
+                if callable(func):
+                    func(False)
                 pygame.mixer.music.stop()
                 pygame.mixer.quit()
             except Exception as e:

@@ -1,7 +1,12 @@
 
 # Replace AppOpener with macOS open command
 from webbrowser import open as webopen
-from pywhatkit import search, playonyt
+try:
+    from pywhatkit import search, playonyt
+except Exception as e:
+    print(f"[MITO] pywhatkit unavailable: {e}")
+    search = None
+    playonyt = None
 from dotenv import dotenv_values
 from bs4 import BeautifulSoup
 from rich import print
@@ -35,6 +40,9 @@ SystemChatBot = [{"role": "system", "content": f"Hello, I am {os.environ['USER']
 
 
 def GoogleSearch(Topic):
+    if search is None:
+        print("[MITO] Google Search unavailable.")
+        return False
     search(Topic)
     return True
 
@@ -47,15 +55,27 @@ def  Content(Topic):
     def ContentWriterAI(prompt):
         messages.append({"role": "user", "content":f"{prompt}"})
 
-        completion = client.chat.completions.create(
-            model="mistral-saba-24b llama-3.3-70b-versatile" , 
-            messages= SystemChatBot + messages,  
-            max_tokens=2048,
-            temperature=0.7,
-            top_p=1,
-            stream=True,
-            stop=None
-        )
+        candidate_models = ["groq/compound", "groq/compound-mini", "qwen/qwen3.6-27b"]
+        completion = None
+        for model in candidate_models:
+            try:
+                completion = client.chat.completions.create(
+                    model=model,
+                    messages= SystemChatBot + messages,  
+                    max_tokens=2048,
+                    temperature=0.7,
+                    top_p=1,
+                    stream=True,
+                    stop=None
+                )
+                break
+            except Exception as e:
+                print(f"[MITO ContentWriterAI Warning] Model {model} failed: {e}")
+                continue
+
+        if completion is None:
+            return "Failed to generate content."
+
         Answer = ""
 
         for chunk in completion:
@@ -86,6 +106,9 @@ def YouTubeSearch(Topic):
 
 
 def PlayYoutube(query):
+    if playonyt is None:
+        print("[MITO] YouTube playback unavailable.")
+        return False
     playonyt(query)
     return True
 

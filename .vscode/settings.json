@@ -1,6 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./dist/Darling.app/Contents/Resources/lib/python3.10",
+        "./dist/Mito.app/Contents/Resources/lib/python3.10",
         "./FRONTEND"
     ],
     "python-envs.defaultEnvManager": "ms-python.python:system",

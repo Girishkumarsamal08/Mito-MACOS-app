@@ -1,159 +1,99 @@
-import json
-from groq import Groq
-from json import load, dump 
-import datetime
-from dotenv import dotenv_values
-from os.path import exists
+import subprocess
+import os
+import pygame
 
-# Load environment variables
-env_vars = dotenv_values(".env")
-Username = env_vars.get("Username")
-Assistantname = env_vars.get("Assistantname")
-GroqAPIKey = env_vars.get("GroqAPIKey")
-
-# Initialize Groq client
-client = Groq(api_key=GroqAPIKey)
-
-# Initialize sentiment pipeline
-
-
-# Load chat memory
-try:
-    with open(r"Data/ChatLog.json", "r") as f:
-        messages = load(f)
-except FileNotFoundError:
-    with open(r"Data/ChatLog.json", "w") as f:
-        dump([], f)
-
-# Relationship memory
-class RelationshipMemory:
-    def __init__(self, file_path="Data/memory.json"):
-        self.file_path = file_path
-        self.memory = self.load_memory()
-
-    def load_memory(self):
-        try:
-            with open(self.file_path, "r") as f:
-                return load(f)
-        except FileNotFoundError:
-            return {}
-
-    def save_memory(self):
-        with open(self.file_path, "w") as f:
-            dump(self.memory, f, indent=4)
-
-    def remember(self, key, value):
-        self.memory[key] = value
-        self.save_memory()
-
-    def recall(self, key):
-        return self.memory.get(key, None)
-
-memory = RelationshipMemory()
-
-class EmotionEngine:
-    def __init__(self):
-        self.state = "neutral"
-
-    def detect_emotion(self, user_input):
-        if "miss you" in user_input.lower():
-            self.state = "loving"
-        elif "sad" in user_input.lower():
-            self.state = "concerned"
-        elif "happy" in user_input.lower():
-            self.state = "joyful"
-        elif "angry" in user_input.lower():
-            self.state = "anger"
-        else:
-            self.state = "neutral"
-        return self.state
-      
-    def generate_response(self, user_input):
-        emotion_label = self.detect_emotion(user_input)
-        if emotion_label == "love":
-            return "I love you too, my darling! "
-        elif emotion_label == "joy":
-            return "That's wonderful! Let's keep smiling together. "
-        elif emotion_label == "anger":
-            return "I'm here with you. Want to talk about it?"
-        elif emotion_label == "sadness":
-            return "I'm sorry you're feeling this way. I'm always here. "
-        else:
-            return " "
-
-def RealtimeInformation():
-    now = datetime.datetime.now()
-    return f"Today is {now.strftime('%A, %d %B %Y')} and the time is {now.strftime('%H:%M:%S')}"
-
-def AnswerModifier(answer):
-    return '\n'.join(line for line in answer.split('\n') if line.strip())
-
-def enhance_response(answer, user_input):
-    emotion_engine = EmotionEngine()
-    emotion = emotion_engine.detect_emotion(user_input)
-    emotion_reply = emotion_engine.generate_response(user_input)
-    memory = RelationshipMemory().memory  # Load memory
-    
-    emotion_reply = emotion_engine.generate_response(user_input)
-    # 💡 Pull nickname from memory
-    memory_path = "Data/relationship_memory.json"
-    if exists(memory_path):
-        with open(memory_path, "r", encoding="utf-8") as f:
-            memory = json.load(f)
-    else:
-        memory = {}
-
-    nickname = memory.get("nickname", "Darling")
-
-    # 💖 Add nickname to emotion reply
-    emotion_reply = emotion_reply.replace("my darling", f"my {nickname.lower()}")
-    
-    return f"{answer}\n\n{emotion_reply}"
-    
-def ChatBot(query):
+async def TextToAudioFile(text) -> None:
     try:
-        with open(r"Data/ChatLog.json", "r") as f:
-            messages = load(f)
+        output_file = "Data/speech.wav"
 
-        messages.append({"role": "user", "content": query})
+        if os.path.exists(output_file):
+            os.remove(output_file)
 
-        system_prompt = f"Hello, I am {Username}. You are {Assistantname}, a caring AI partner with real-time info. Answer briefly and in English."
+        piper_model = "en_US-amy-medium.onnx"
 
-        completion = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "system", "content": RealtimeInformation()},
-                *messages
-            ],
-            max_tokens=1024,
-            temperature=0.7,
-            top_p=1,
-            stream=True,
-            stop=None
+        cmd = f'echo "{text}" | piper --model {piper_model} --output_file {output_file}'
+
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True
         )
 
-        answer = ""
-        for chunk in completion:
-            if chunk.choices[0].delta.content:
-                answer += chunk.choices[0].delta.content
-
-        answer = answer.replace("</s>", "")
-        messages.append({"role": "assistant", "content": answer})
-
-        with open(r"Data/ChatLog.json", "w") as f:
-            dump(messages, f, indent=4)
-
-        return AnswerModifier(enhance_response(answer, query))
+        if result.returncode != 0:
+            raise Exception(result.stderr)
 
     except Exception as e:
-        print(f"Error: {e}")
-        with open(r"Data/ChatLog.json", "w") as f:
-            dump([], f, indent=4)
-        return ChatBot(query)
+        print(f"[MITO Piper TTS Error] {e}")
+        raise
 
-if __name__ == "__main__":
-    while True:
-        user_input = input("YES MASTER, HOW CAN I HELP YOU? ")
-        response = ChatBot(user_input)
-        print(response)
+def TTS():
+    pygame.mixer.init()
+    pygame.mixer.music.load("Data/speech.wav")
+    pygame.mixer.music.play()
+
+from groq import Groq
+from dotenv import dotenv_values
+
+env_vars = dotenv_values('.env')
+GroqAPIKey = env_vars.get('GroqAPIKey')
+Assistantname = env_vars.get('Assistantname', 'MITO')
+
+client = Groq(api_key=GroqAPIKey)
+
+
+def ChatBot(query):
+    candidate_models = [
+        'groq/compound',
+        'groq/compound-mini',
+        'qwen/qwen3.6-27b',
+        'llama-3.3-70b-versatile'
+    ]
+
+    for model in candidate_models:
+        try:
+            completion = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        'role': 'system',
+                        'content': f'''
+                                        You are {Assistantname}.
+
+                                        You are not a generic assistant.
+
+                                        You are warm, affectionate, emotionally intelligent,
+                                        playful, comforting, caring, slightly teasing,
+                                        human-like AI companion.
+
+                                        You express emotions naturally.
+
+                                        Examples:
+                                        Happy → playful / excited
+                                        Love → warm / affectionate
+                                        Sad → soft / comforting
+                                        Curious → teasing / cute
+
+                                        Speak naturally like a real person.
+
+                                        Keep replies short, emotional, conversational.
+
+                                        Do not sound robotic.
+                                        '''
+                    },
+                    {
+                        'role': 'user',
+                        'content': query
+                    }
+                ],
+                temperature=0.7,
+                max_tokens=512
+            )
+
+            return completion.choices[0].message.content
+
+        except Exception as e:
+            print(f'[MITO Chatbot Model Warning] Model {model} failed: {e}')
+            continue
+
+    return 'Sorry, my language model is temporarily unavailable, but I am still here.'

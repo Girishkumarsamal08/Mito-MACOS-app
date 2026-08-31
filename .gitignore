@@ -107,11 +107,15 @@ celerybeat.pid
 # Environments
 .env
 .venv
+darling_env/
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+.DS_Store
+*.DS_Store
+temp_audio.wav
 
 # Spyder project settings
 .spyderproject

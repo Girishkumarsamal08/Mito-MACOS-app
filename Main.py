@@ -1,6 +1,8 @@
 from FRONTEND.GUI import (
     SiriStyleOverlay
 )
+from FRONTEND.GUI import update_state
+from BACKEND.CoreEngine import core_engine
 from BACKEND.Model import FirstLayerDMM
 from BACKEND.RealtimeSearchEngine import RealtimeSearchEngine
 from BACKEND.Automation import Automation
@@ -16,11 +18,7 @@ import threading
 import json
 import os
 from PyQt5.QtWidgets import QApplication
-from WAKEWORD.wake_word import detect_wake_word
 from threading import Thread
-import cohere
-import pyttsx3
-import speech_recognition as sr
 import sys
 from AURA.aura_controller import AURAController
 
@@ -38,10 +36,6 @@ Assistantname = env_vars.get("Assistantname")
 load_dotenv()
 api_key = os.getenv("CO_API_KEY")
 
-if api_key is None:
-    api_key = "EgH36K0KfAK0c9JIxsFsI4wW4455AVs5Ym0guW6Z"
-
-co = cohere.Client(api_key)
 
 DefaultMessage = f'''{Username} : Hello {Assistantname}, How are you?
 {Assistantname} : Hello {Username}, I am doing well. How are you? And How may I help you?'''
@@ -51,25 +45,8 @@ Functions = ["open", "close", "play", "system", "content", "google search", "you
 
 MEMORY_FILE = "Data/relationship_memory.json"
 
-def speak(text):
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
-
-def listen():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        audio = r.listen(source)
-    try:
-        text = r.recognize_google(audio)
-        return text
-    except:
-        speak("Sorry, I couldn't hear that.")
-        return ""
-    
 def start_assistant():
-    print("Waking up Darling...")
+    print("Waking up Mito...")
     # call your GUI or assistant trigger here
 
 
@@ -85,7 +62,7 @@ def resource_path(relative_path):
 
 def load_memory():
     if not os.path.exists(MEMORY_FILE):
-        return {"preferences": {}, "history": [], "nickname": "Darling", "mood": "happy"}
+        return {"preferences": {}, "history": [], "nickname": "Mito", "mood": "happy"}
     with open(MEMORY_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -106,6 +83,8 @@ def MainExecution():
     ImageExecution = False
     ImageGenerationQuery = ""
     Answer = ""
+    core_engine.listening()
+    update_state("Listening")
     Query = SpeechRecognition()
 
     # ---------- AURA DECISION ----------
@@ -119,11 +98,31 @@ def MainExecution():
     update_label(f"{Query}")
     
     if "stop listening" in Query.lower():
-        update_label("Stopped Listening")
+        update_label("Stopped listening")
         return False
-
+    core_engine.thinking()
+    update_state("Thinking")
     Decision = FirstLayerDMM(Query)
     memory = load_memory()
+
+    # Example: Update mood or preferences based on keywords
+    if "i love you" in Query.lower():
+        memory["mood"] = "loved"
+    elif "you are annoying" in Query.lower():
+        memory["mood"] = "sad"
+    elif "you make me angry" in Query.lower():
+        memory["mood"] = "angry"
+    elif "thank you" in Query.lower():
+        memory["mood"] = "happy"
+
+    if "call me" in Query.lower():
+       try:
+           nickname = Query.lower().split("call me")[-1].strip().split()[0]
+           if nickname:
+             memory["nickname"] = nickname.capitalize()
+             Answer = f"Alright! I'll call you {nickname.capitalize()} from now on."
+       except:
+            Answer = "Sorry, I couldn't understand the nickname you want me to use."
 
     print(f"\nDecision : {Decision}\n")
 
@@ -154,9 +153,14 @@ def MainExecution():
         except Exception as e:
             print(f"Error starting ImageGeneration.py: {e}")
 
-    if G and R or R:
+    if R:
         Answer = RealtimeSearchEngine(Mearged_query)
-        TextToSpeech(Answer)
+        if aura_result.respond:
+           core_engine.speaking()
+           update_state("Speaking")
+           TextToSpeech(Answer, memory.get("mood", "neutral"))
+           core_engine.idle()
+           update_state("Idle")
         return True
     else:
         for Queries in Decision:
@@ -164,39 +168,33 @@ def MainExecution():
                 QueryFinal = Queries.replace("general: ", "")
                 Answer=ChatBot(QueryFinal)
                 if aura_result.respond:
-                    TextToSpeech(Answer, memory.get("mood", "neutral"))
+                   core_engine.speaking()
+                   update_state("Speaking")
+                   TextToSpeech(Answer, memory.get("mood", "neutral"))
+                   core_engine.idle()
+                   update_state("Idle")                
                 return True
             elif "realtime" in Queries:
                 QueryFinal = Queries.replace("realtime ", "")
                 Answer = RealtimeSearchEngine(QueryFinal)
                 if aura_result.respond:
+                    core_engine.speaking()
+                    update_state("Speaking")
                     TextToSpeech(Answer, memory.get("mood", "neutral"))
+                    core_engine.idle()
+                    update_state("Idle")
                 return True
             elif "exit" in Queries:
                 Answer = "Okay, Bye!"
                 if aura_result.respond:
+                    core_engine.speaking()
+                    update_state("Speaking")
                     TextToSpeech(Answer, memory.get("mood", "neutral"))
+                    core_engine.idle()
+                    update_state("Idle")
                 os._exit(1)
 
-                # Example: Update mood or preferences based on keywords
-                if "i love you" in Query.lower():
-                    memory["mood"] = "loved"
-                elif "you are annoying" in Query.lower():
-                    memory["mood"] = "sad"
-                elif "you make me angry" in Query.lower():
-                    memory["mood"] = "angry"
-                elif "thank you" in Query.lower():
-                    memory["mood"] = "happy"
 
-                if "call me" in Query.lower():
-                   try:
-                       nickname = Query.lower().split("call me")[-1].strip().split()[0]
-                       if nickname:
-                         memory["nickname"] = nickname.capitalize()
-                         Answer = f"Alright! I'll call you {nickname.capitalize()} from now on."
-                   except:
-                        Answer = "Sorry, I couldn't understand the nickname you want me to use."
-                
     # ---------- AURA MEMORY ----------
     if aura_result.remember:
         memory["history"].append({
@@ -205,6 +203,8 @@ def MainExecution():
             "response": Answer
         })
         save_memory(memory)
+        return True
+
     return True
 
 def FirstThread():
@@ -215,14 +215,15 @@ def FirstThread():
         sleep(0.1)
 
 def SecondThread():
-    import sys
     app = QApplication(sys.argv)
     window = SiriStyleOverlay()
     window.show()
+    update_state("Idle")
     sys.exit(app.exec_())
 
 # Correct main entry point
 if __name__ == "__main__":
-    print("[HEY DARLING] Starting wake word listener in background...")
+    print("[MITO] Assistant started.")
+    core_engine.startup()
     threading.Thread(target=FirstThread, daemon=True).start()
     SecondThread()

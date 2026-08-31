@@ -1,10 +1,13 @@
 import speech_recognition as sr
+import whisper
+import numpy as np
 import os
 import mtranslate as mt
 from dotenv import dotenv_values
 
 env_vars = dotenv_values(".env")
 InputLanguage = env_vars.get("InputLanguage")
+model = whisper.load_model("base")
 
 def QueryModifier(Query):
     new_query = Query.lower().strip()
@@ -34,11 +37,32 @@ def SpeechRecognition():
     try:
         with sr.Microphone() as source:
             print("Listening...")
-            r.pause_threshold = 0.6
-            audio = r.listen(source, timeout=5, phrase_time_limit=8)
 
-        print("Recognizing...")
-        query = r.recognize_google(audio, language=InputLanguage)
+            r.adjust_for_ambient_noise(source, duration=2)
+
+            r.dynamic_energy_threshold = True
+            r.energy_threshold = 300
+            r.pause_threshold = 1
+
+            audio = r.listen(
+                source,
+                timeout=15,
+                phrase_time_limit=12
+            )
+
+        print("Transcribing with Whisper...")
+
+        audio_np = np.frombuffer(
+            audio.get_raw_data(convert_rate=16000, convert_width=2),
+            np.int16
+        ).astype(np.float32) / 32768.0
+
+        result = model.transcribe(audio_np, fp16=False)
+        query = result["text"].strip()
+        if not query:
+            print("[MITO] Empty transcription.")
+            return ""
+
         print(f"User said: {query}")
 
         if InputLanguage and (InputLanguage.lower() == "en" or "en" in InputLanguage.lower()):
@@ -47,22 +71,14 @@ def SpeechRecognition():
             return QueryModifier(UniversalTranslator(query))
 
     except sr.WaitTimeoutError:
-        # No speech detected within timeout
+        print("Timeout — no speech detected.")
         return ""
 
     except sr.UnknownValueError:
-        # Speech was unintelligible
-        return ""
-
-    except sr.RequestError:
-        # Google API/network issue
-        return ""
-
-    except ConnectionResetError:
-        # Connection dropped by Google
+        print("Could not understand audio.")
         return ""
 
     except Exception as e:
-        # Catch-all to prevent thread crash
-        print("SpeechRecognition error:", e)
+        print(f"SpeechRecognition Error: {e}")
         return ""
+ 

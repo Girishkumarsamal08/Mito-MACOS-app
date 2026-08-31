@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ACCESS_KEY = os.getenv("PICOVOICE_ACCESS_KEY")
-KEYWORD_PATH = os.path.join(os.path.dirname(__file__), "HEY-DARLING_en_mac_v3_0_0.ppn")
+KEYWORD_PATH = os.path.join(os.path.dirname(__file__), "HEY-Mito_en_mac_v3_0_0.ppn")
 
 
 def detect_wake_word(callback):
@@ -34,7 +34,7 @@ def detect_wake_word(callback):
             pcm = struct.unpack_from("h" * porcupine.frame_length, audio_data)
             result = porcupine.process(pcm)
             if result >= 0:
-                print("[HEY DARLING] Wake word detected!")
+                print("[HEY Mito] Wake word detected!")
                 callback()
         
 

@@ -9,7 +9,8 @@ env_vars = dotenv_values(".env")
 CO_API_KEY = env_vars.get("CO_API_KEY")
 
 
-co = cohere.Client(api_key=CO_API_KEY)
+from cohere import ClientV2
+co = ClientV2(api_key=CO_API_KEY)
  
 
 funcs = [  
@@ -19,7 +20,6 @@ funcs = [
 ]
 
 
-messages = []
 
 
 preamble = """
@@ -59,33 +59,25 @@ ChatHistory = [
 
 
 def FirstLayerDMM(prompt: str = "test"):
+    try:
+        response_obj = co.chat(
+            model="command-r",
+            messages=[
+                {"role": "system", "content": preamble},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3
+        )
+    except Exception as e:
+        print(f"[MITO] Cohere Error: {e}")
+        return [f"general {prompt}"]
 
-    messages.append({"role": "user", "content": f"{prompt}"})
-
-
-    stream = co.chat_stream(
-        model = 'command-r-plus',
-        message = prompt,
-        temperature = 0.7,
-        chat_history = ChatHistory,
-        prompt_truncation = 'OFF',
-        connectors = [],
-        preamble = preamble
-    )
-
-
-    response = ""
-
-
-    for event in stream:
-        if event.event_type == "text-generation":
-            response += event.text  
+    response = response_obj.message.content[0].text
 
     response = response.replace("\n", "")
     response = response.split(",")
 
     response = [i.strip() for i in response]
-
 
     temp = [] 
 
@@ -96,7 +88,7 @@ def FirstLayerDMM(prompt: str = "test"):
 
     response =temp
 
-    if "(query)" in response:
+    if any("(query)" in item for item in response):
         newresponse = FirstLayerDMM(prompt=prompt)
         return newresponse
     else: 
