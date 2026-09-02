@@ -69,6 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         print("[MITOApp] Auto-starting Python backend Main.py...")
         let projectDir = "/Users/girishkumarsamal/Downloads/MITO copy"
+        let venvPython = "\(projectDir)/.venv/bin/python3"
         let darlingPython = "\(projectDir)/darling_env/bin/python3"
         let mainScript = "\(projectDir)/Main.py"
         
@@ -78,7 +79,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         env["PYTHONUNBUFFERED"] = "1"
         process.environment = env
         
-        if FileManager.default.fileExists(atPath: darlingPython) {
+        if FileManager.default.fileExists(atPath: venvPython) {
+            process.executableURL = URL(fileURLWithPath: venvPython)
+            process.arguments = [mainScript]
+        } else if FileManager.default.fileExists(atPath: darlingPython) {
             process.executableURL = URL(fileURLWithPath: darlingPython)
             process.arguments = [mainScript]
         } else {
