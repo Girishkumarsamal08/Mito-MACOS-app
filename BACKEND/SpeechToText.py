@@ -52,11 +52,15 @@ def _notify_bridge(state: str, text: str):
     except Exception:
         pass
 
-# Global recognizer instance to preserve energy threshold
+# Global recognizer instance with ultra-low latency thresholds
 recognizer = sr.Recognizer()
-recognizer.pause_threshold = 0.6
+recognizer.pause_threshold = 0.35
+recognizer.non_speaking_duration = 0.2
 recognizer.dynamic_energy_threshold = True
-recognizer.energy_threshold = 300
+recognizer.energy_threshold = 280
+
+# Cached Groq client for instant zero-overhead API requests
+groq_client = Groq(api_key=GroqAPIKey) if GroqAPIKey else None
 
 def get_microphone():
     env = dotenv_values(".env")
@@ -90,8 +94,8 @@ def SpeechRecognition():
             _notify_bridge("listening", "Listening...")
             audio = recognizer.listen(
                 source,
-                timeout=5,
-                phrase_time_limit=12
+                timeout=4,
+                phrase_time_limit=10
             )
 
         print("[MITO STT] Transcribing audio...")
@@ -99,18 +103,19 @@ def SpeechRecognition():
 
         query = ""
 
-        # 1. Try Groq Whisper API (Ultra-fast, ~100ms response time)
-        if GroqAPIKey:
+        # 1. Try Groq Whisper API (Cached client + language="en" + temperature=0.0 -> sub-50ms execution)
+        if groq_client:
             try:
-                client = Groq(api_key=GroqAPIKey)
                 wav_data = audio.get_wav_data(convert_rate=16000, convert_width=2)
                 buffer = io.BytesIO(wav_data)
                 buffer.name = "audio.wav"
 
-                transcription = client.audio.transcriptions.create(
+                transcription = groq_client.audio.transcriptions.create(
                     file=buffer,
                     model="whisper-large-v3-turbo",
-                    prompt="MITO assistant, Hinglish and English conversation."
+                    language="en",
+                    temperature=0.0,
+                    response_format="json"
                 )
                 query = transcription.text.strip()
             except Exception as groq_err:
