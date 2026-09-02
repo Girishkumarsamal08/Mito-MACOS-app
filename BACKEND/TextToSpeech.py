@@ -40,6 +40,10 @@ def remove_emojis(text: str) -> str:
 
 def TTS(Text: str, func_or_mood=None):
     Text = remove_emojis(Text)
+    if not Text or sum(1 for c in Text if c.isalnum()) < 2:
+        print(f"[MITO TTS] Ignored non-speech text: {repr(Text)}")
+        return False
+
     print(f"[MITO Speech] Speaking: {Text}")
     _notify_bridge(Text)
 

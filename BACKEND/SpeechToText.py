@@ -86,6 +86,19 @@ def get_microphone():
 
     return sr.Microphone()
 
+def is_valid_speech(text: str) -> bool:
+    if not text or not text.strip():
+        return False
+    # Ignore text without at least 2 alphanumeric characters
+    alnum_count = sum(1 for c in text if c.isalnum())
+    if alnum_count < 2:
+        return False
+    # Ignore common Whisper background noise artifacts
+    noise_patterns = {".", ",", "!", "?", "...", "-", "--", "thank you.", "thanks for watching.", "subtitles by amara.org"}
+    if text.lower().strip() in noise_patterns:
+        return False
+    return True
+
 def SpeechRecognition():
     try:
         mic = get_microphone()
@@ -134,8 +147,8 @@ def SpeechRecognition():
             except Exception as local_err:
                 print(f"[MITO STT Local Whisper Error] {local_err}")
 
-        if not query:
-            print("[MITO STT] No words recognized.")
+        if not is_valid_speech(query):
+            print(f"[MITO STT] Ignored non-speech noise: {repr(query)}")
             return ""
 
         print(f"[MITO STT] User said: {query}")
