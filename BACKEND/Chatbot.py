@@ -63,6 +63,11 @@ def clean_response_text(text: str) -> str:
     text = re.sub(r'Here\'?s a thinking process:?', '', text, flags=re.IGNORECASE)
     text = re.sub(r'thinking process:?', '', text, flags=re.IGNORECASE)
 
+    # Strip meta-analysis sentences (e.g. 'The user said "Oh"...')
+    if "the user said" in text.lower() or "non-committal" in text.lower():
+        lines = [l for l in text.split(".") if not "the user said" in l.lower() and not "non-committal" in l.lower()]
+        text = ". ".join(lines)
+
     # Remove code blocks, markdown symbols (*, _, #, >, `, etc.)
     text = re.sub(r'```[\s\S]*?```', '', text)
     text = re.sub(r'[`*_#>]', '', text)
@@ -72,11 +77,11 @@ def clean_response_text(text: str) -> str:
     return ' '.join(cleaned.split())
 
 def ChatBot(query):
+    # Pure conversational models (no compound router meta-analysis models)
     candidate_models = [
-        'qwen/qwen3.6-27b',
-        'groq/compound-mini',
         'openai/gpt-oss-20b',
-        'groq/compound'
+        'qwen/qwen3.6-27b',
+        'openai/gpt-oss-120b'
     ]
 
     for model in candidate_models:
