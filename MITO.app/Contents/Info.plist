@@ -7,6 +7,8 @@
     <key>CFBundleExecutable</key>
     <string>MITO</string>
     <key>CFBundleIconFile</key>
+    <string>AppIcon.icns</string>
+    <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.mito.desktop.app</string>

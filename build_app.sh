@@ -37,13 +37,21 @@ max_dim = max(w, h)
 square_img = Image.new('RGBA', (max_dim, max_dim), (0, 0, 0, 0))
 square_img.paste(img, ((max_dim - w) // 2, (max_dim - h) // 2))
 
-sizes = [16, 32, 64, 128, 256, 512, 1024]
-for s in sizes:
-    resized = square_img.resize((s, s), Image.LANCZOS)
-    resized.save(os.path.join(iconset_dir, f'icon_{s}x{s}.png'))
-    if s <= 512:
-        resized_2x = square_img.resize((s * 2, s * 2), Image.LANCZOS)
-        resized_2x.save(os.path.join(iconset_dir, f'icon_{s}x{s}@2x.png'))
+specs = [
+    ('icon_16x16.png', 16),
+    ('icon_16x16@2x.png', 32),
+    ('icon_32x32.png', 32),
+    ('icon_32x32@2x.png', 64),
+    ('icon_128x128.png', 128),
+    ('icon_128x128@2x.png', 256),
+    ('icon_256x256.png', 256),
+    ('icon_256x256@2x.png', 512),
+    ('icon_512x512.png', 512),
+    ('icon_512x512@2x.png', 1024)
+]
+
+for filename, sz in specs:
+    square_img.resize((sz, sz), Image.LANCZOS).save(os.path.join(iconset_dir, filename))
 
 subprocess.run(['iconutil', '-c', 'icns', iconset_dir, '-o', icns_path], capture_output=True)
 subprocess.run(['rm', '-rf', iconset_dir])
@@ -65,6 +73,8 @@ cat << 'EOF' > "$APP_DIR/Contents/Info.plist"
     <key>CFBundleExecutable</key>
     <string>MITO</string>
     <key>CFBundleIconFile</key>
+    <string>AppIcon.icns</string>
+    <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.mito.desktop.app</string>
@@ -92,5 +102,7 @@ cat << 'EOF' > "$APP_DIR/Contents/Info.plist"
 </plist>
 EOF
 
+touch "$APP_DIR"
 echo "=== MITO.app Bundle Successfully Created ==="
 ls -la "$APP_DIR/Contents/MacOS"
+
