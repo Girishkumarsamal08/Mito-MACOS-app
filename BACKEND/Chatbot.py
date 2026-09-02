@@ -51,7 +51,7 @@ def clean_response_text(text: str) -> str:
     text = re.sub(r'```[\s\S]*?```', '', text)
     text = re.sub(r'[`*_#>]', '', text)
     # Remove emojis and non-standard symbols
-    emoji_pattern = re.compile(r'[\U00010000-\U0010ffff\u2600-\u26FF\u2700-\u27BF\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F1E0-\u1F1FF]', flags=re.UNICODE)
+    emoji_pattern = re.compile(r'[\U00010000-\U0010FFFF\u2600-\u26FF\u2700-\u27BF]', flags=re.UNICODE)
     cleaned = emoji_pattern.sub('', text)
     return ' '.join(cleaned.split())
 
