@@ -194,9 +194,11 @@ def MainExecution():
     else:
         for Queries in Decision:
             if "general" in Queries:
-                QueryFinal = Queries.replace("general: ", "")
-                Answer=ChatBot(QueryFinal)
-                if aura_result.respond:
+                QueryFinal = Queries.replace("general", "").replace(":", "").strip()
+                if not QueryFinal:
+                    QueryFinal = Query
+                Answer = ChatBot(QueryFinal)
+                if aura_result.respond and Answer:
                    core_engine.speaking()
                    update_state("Speaking")
                    TextToSpeech(Answer, memory.get("mood", "neutral"))
@@ -204,9 +206,11 @@ def MainExecution():
                    update_state("Idle")                
                 return True
             elif "realtime" in Queries:
-                QueryFinal = Queries.replace("realtime ", "")
+                QueryFinal = Queries.replace("realtime", "").replace(":", "").strip()
+                if not QueryFinal:
+                    QueryFinal = Query
                 Answer = RealtimeSearchEngine(QueryFinal)
-                if aura_result.respond:
+                if aura_result.respond and Answer:
                     core_engine.speaking()
                     update_state("Speaking")
                     TextToSpeech(Answer, memory.get("mood", "neutral"))
