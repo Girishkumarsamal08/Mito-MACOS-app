@@ -47,6 +47,18 @@ import re
 def clean_response_text(text: str) -> str:
     if not text:
         return ""
+    
+    # Strip <think> reasoning blocks from Qwen / DeepSeek models
+    if "</think>" in text:
+        text = text.split("</think>")[-1]
+    elif text.strip().startswith("<think"):
+        lines = text.split("\n")
+        resp_lines = [l for l in lines if not l.strip().startswith("<think") and not re.match(r'^\d+\.', l.strip()) and not l.strip().startswith("-")]
+        if resp_lines:
+            text = " ".join(resp_lines)
+        else:
+            text = text.replace("<think", "")
+
     # Remove code blocks, markdown symbols (*, _, #, >, `, etc.)
     text = re.sub(r'```[\s\S]*?```', '', text)
     text = re.sub(r'[`*_#>]', '', text)
@@ -57,11 +69,10 @@ def clean_response_text(text: str) -> str:
 
 def ChatBot(query):
     candidate_models = [
-        'groq/compound',
-        'groq/compound-mini',
         'qwen/qwen3.6-27b',
-        'openai/gpt-oss-120b',
-        'openai/gpt-oss-20b'
+        'groq/compound-mini',
+        'openai/gpt-oss-20b',
+        'groq/compound'
     ]
 
     for model in candidate_models:
@@ -79,8 +90,9 @@ def ChatBot(query):
                                         Be caring, playful, and conversational (e.g. use phrases like "Master, aap kya kar rahe ho?", "Oh acha thik h!").
 
                                         CRITICAL RULES:
-                                        1. Do NOT use any emojis, emoticons, or graphical symbols in your response under any circumstances. Speak strictly in plain text.
-                                        2. Do NOT use markdown code blocks, bold asterisks (**), or quote headers (>). Write direct spoken sentences.
+                                        1. Do NOT output thinking blocks, reasoning logs, or <think> tags. Respond directly with your spoken answer.
+                                        2. Do NOT use any emojis, emoticons, or graphical symbols in your response under any circumstances. Speak strictly in plain text.
+                                        3. Do NOT use markdown code blocks, bold asterisks (**), or quote headers (>). Write direct spoken sentences.
                                         Keep responses concise, warm, and natural.
                                         '''
                     },
