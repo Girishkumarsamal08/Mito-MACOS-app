@@ -58,9 +58,34 @@ recognizer.pause_threshold = 0.6
 recognizer.dynamic_energy_threshold = True
 recognizer.energy_threshold = 300
 
+def get_microphone():
+    env = dotenv_values(".env")
+    mic_index_env = env.get("MicrophoneIndex")
+    mic_name_env = env.get("MicrophoneName")
+
+    mics = sr.Microphone.list_microphone_names()
+
+    if mic_index_env is not None and str(mic_index_env).isdigit():
+        idx = int(mic_index_env)
+        if 0 <= idx < len(mics):
+            return sr.Microphone(device_index=idx)
+
+    if mic_name_env:
+        for idx, name in enumerate(mics):
+            if mic_name_env.lower() in name.lower():
+                return sr.Microphone(device_index=idx)
+
+    # Prefer built-in laptop microphone over virtual/headset devices
+    for idx, name in enumerate(mics):
+        if any(k in name.lower() for k in ["macbook", "built-in", "internal"]):
+            return sr.Microphone(device_index=idx)
+
+    return sr.Microphone()
+
 def SpeechRecognition():
     try:
-        with sr.Microphone() as source:
+        mic = get_microphone()
+        with mic as source:
             print("[MITO STT] Listening for speech...")
             _notify_bridge("listening", "Listening...")
             audio = recognizer.listen(
