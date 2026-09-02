@@ -42,6 +42,15 @@ Assistantname = env_vars.get('Assistantname', 'MITO')
 client = Groq(api_key=GroqAPIKey)
 
 
+import re
+
+def remove_emojis(text: str) -> str:
+    if not text:
+        return ""
+    emoji_pattern = re.compile(r'[\U00010000-\U0010ffff\u2600-\u26FF\u2700-\u27BF\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F1E0-\u1F1FF]', flags=re.UNICODE)
+    cleaned = emoji_pattern.sub('', text)
+    return ' '.join(cleaned.split())
+
 def ChatBot(query):
     candidate_models = [
         'groq/compound',
@@ -65,6 +74,7 @@ def ChatBot(query):
 
                                         Be caring, playful, and conversational (e.g. use phrases like "Master, aap kya kar rahe ho?", "Oh acha thik h!").
 
+                                        CRITICAL RULE: Do NOT use any emojis, emoticons, or graphical symbols in your response under any circumstances. Speak strictly in plain text.
                                         Keep responses concise, warm, and natural.
                                         '''
                     },
@@ -77,7 +87,8 @@ def ChatBot(query):
                 max_tokens=512
             )
 
-            return completion.choices[0].message.content
+            raw_reply = completion.choices[0].message.content
+            return remove_emojis(raw_reply)
 
         except Exception as e:
             print(f'[MITO Chatbot Model Warning] Model {model} failed: {e}')

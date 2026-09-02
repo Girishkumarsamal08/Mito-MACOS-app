@@ -29,7 +29,17 @@ async def TextToAudioFile(text: str) -> str:
     tts.save(file_path)
     return file_path
 
+import re
+
+def remove_emojis(text: str) -> str:
+    if not text:
+        return ""
+    emoji_pattern = re.compile(r'[\U00010000-\U0010ffff\u2600-\u26FF\u2700-\u27BF\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F1E0-\u1F1FF]', flags=re.UNICODE)
+    cleaned = emoji_pattern.sub('', text)
+    return ' '.join(cleaned.split())
+
 def TTS(Text: str, func_or_mood=None):
+    Text = remove_emojis(Text)
     print(f"[MITO Speech] Speaking: {Text}")
     _notify_bridge(Text)
 

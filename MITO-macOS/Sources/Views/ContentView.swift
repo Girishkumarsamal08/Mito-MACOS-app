@@ -9,25 +9,29 @@ struct ContentView: View {
             Color.clear
             
             VStack(spacing: 0) {
-                // Status pill overlay (shows on hover or when disconnected/error)
-                if isHovered || !stateStore.isConnected || stateStore.currentState == .error {
+                // Status & Speech Bubble Overlay (Always visible on top of head when active, speaking, or hovering)
+                if !stateStore.statusMessage.isEmpty {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(connectionColor)
                             .frame(width: 7, height: 7)
                         
                         Text(stateStore.statusMessage)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(3)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
                     .background(
                         Capsule()
-                            .fill(Color.black.opacity(0.65))
+                            .fill(Color.black.opacity(0.75))
+                            .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
                     )
                     .padding(.top, 8)
-                    .transition(.opacity)
+                    .padding(.horizontal, 16)
+                    .transition(.opacity.combined(with: .scale))
                 }
                 
                 Spacer()

@@ -10,10 +10,11 @@ class TransparentVideoView: NSView {
         self.wantsLayer = true
         self.layer?.backgroundColor = NSColor.clear.cgColor
         self.layer?.isOpaque = false
+        self.layer?.masksToBounds = true
         
         playerLayer.backgroundColor = NSColor.clear.cgColor
         playerLayer.isOpaque = false
-        playerLayer.videoGravity = .resizeAspect
+        playerLayer.videoGravity = .resizeAspectFill
         self.layer?.addSublayer(playerLayer)
     }
     
