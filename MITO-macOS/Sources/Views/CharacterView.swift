@@ -66,6 +66,17 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
             loadVideo(player: player, videoName: videoName)
         }
         
+        private static let removeBlackKernel: CIColorKernel? = {
+            let kernelString = """
+            kernel vec4 removeBlackBackground(__sample s) {
+                float maxRGB = max(s.r, max(s.g, s.b));
+                float alpha = smoothstep(0.003, 0.025, maxRGB);
+                return vec4(s.rgb * alpha, alpha * s.a);
+            }
+            """
+            return CIColorKernel(source: kernelString)
+        }()
+
         private func loadVideo(player: AVQueuePlayer, videoName: String) {
             playerLooper?.disableLooping()
             player.removeAllItems()
@@ -91,14 +102,8 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
             
             let composition = AVVideoComposition(asset: asset) { request in
                 let source = request.sourceImage
-                let kernel = CIColorKernel(source:
-                    "kernel vec4 removeBlackBackground(__sample s) {" +
-                    "  float maxRGB = max(s.r, max(s.g, s.b));" +
-                    "  float alpha = smoothstep(0.003, 0.02, maxRGB);" +
-                    "  return vec4(s.rgb * alpha, alpha * s.a);" +
-                    "}"
-                )
-                if let output = kernel?.apply(extent: source.extent, arguments: [source]) {
+                if let kernel = Coordinator.removeBlackKernel,
+                   let output = kernel.apply(extent: source.extent, arguments: [source]) {
                     request.finish(with: output, context: nil)
                 } else {
                     request.finish(with: source, context: nil)

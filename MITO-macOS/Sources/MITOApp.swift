@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import AVFoundation
 
 @main
 struct MITOApp: App {
@@ -18,6 +19,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        requestMicrophonePermission()
+
         let contentView = ContentView()
         let controller = TransparentWindowController(rootView: AnyView(contentView))
         controller.showWindow(nil)
@@ -32,6 +35,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         MITORuntimeBridge.shared.connect()
         
         print("[MITOApp] Native macOS Shell Launched Successfully.")
+    }
+    
+    private func requestMicrophonePermission() {
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .audio) { granted in
+                print("[MITOApp] Microphone permission requested. Granted: \(granted)")
+            }
+        case .authorized:
+            print("[MITOApp] Microphone access authorized.")
+        default:
+            print("[MITOApp] Microphone access restricted or denied.")
+        }
     }
     
     private func setupStatusItem() {
