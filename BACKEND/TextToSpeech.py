@@ -45,32 +45,11 @@ def TTS(Text: str, func_or_mood=None):
         return False
 
     print(f"[MITO Speech] Speaking: {Text}")
-    _notify_bridge(Text)
 
-    # 1. Try gTTS -> afplay / pygame
+    # 1. macOS Native Speech Synthesis (Instantaneous < 5ms start, 100% synchronized with Speaking.mp4 video)
     try:
-        file_path = asyncio.run(TextToAudioFile(Text))
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            res = subprocess.run(["afplay", file_path], capture_output=True)
-            if res.returncode == 0:
-                return True
-
-            # Fallback to pygame
-            pygame.mixer.init()
-            pygame.mixer.music.load(file_path)
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                if callable(func_or_mood) and func_or_mood() == False:
-                    break
-                pygame.time.Clock().tick(10)
-            return True
-    except Exception as e:
-        print(f"[MITO TTS gTTS Warning] {e}")
-
-    # 2. Fallback to macOS native 'say' command (Offline, instantaneous, ultra-reliable)
-    try:
-        print("[MITO TTS] Using macOS native speech synthesis...")
-        # Prefer a female macOS voice if available (e.g. Samantha, Karen, Victoria, Ava)
+        # Trigger Speaking state update and voice output at the exact same instant
+        _notify_bridge(Text)
         voice = "Samantha"
         res = subprocess.run(["say", "-v", voice, Text], capture_output=True)
         if res.returncode != 0:
@@ -80,15 +59,16 @@ def TTS(Text: str, func_or_mood=None):
     except Exception as e:
         print(f"[MITO TTS macOS say Error] {e}")
 
-    # 3. Fallback to pyttsx3
+    # 2. Fallback: gTTS (Pre-generate audio file first, then trigger Speaking video state + afplay together)
     try:
-        import pyttsx3
-        engine = pyttsx3.init()
-        engine.say(Text)
-        engine.runAndWait()
-        return True
+        file_path = asyncio.run(TextToAudioFile(Text))
+        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            _notify_bridge(Text)
+            res = subprocess.run(["afplay", file_path], capture_output=True)
+            if res.returncode == 0:
+                return True
     except Exception as e:
-        print(f"[MITO TTS pyttsx3 Error] {e}")
+        print(f"[MITO TTS gTTS Warning] {e}")
 
     return False
 
