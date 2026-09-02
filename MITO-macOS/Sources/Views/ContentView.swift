@@ -4,19 +4,36 @@ struct ContentView: View {
     @ObservedObject var stateStore = MITOStateStore.shared
     @State private var isHovered = false
     
+    private var formattedStatusText: String {
+        let msg = stateStore.statusMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Filter out strings that consist only of punctuation / symbols (e.g. ", -!,...")
+        let alphanumericCount = msg.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) }.count
+        if alphanumericCount == 0 {
+            return ""
+        }
+        return msg
+    }
+    
+    private var shouldShowPill: Bool {
+        if formattedStatusText.isEmpty {
+            return false
+        }
+        return isHovered || stateStore.currentState == .speaking || stateStore.currentState == .listening || stateStore.currentState == .thinking || !stateStore.isConnected
+    }
+    
     var body: some View {
         ZStack(alignment: .top) {
             Color.clear
             
             VStack(spacing: 0) {
-                // Status & Speech Bubble Overlay (Always visible on top of head when active, speaking, or hovering)
-                if !stateStore.statusMessage.isEmpty {
+                // Status & Speech Bubble Overlay (Shows clean speech text above head when speaking/active)
+                if shouldShowPill {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(connectionColor)
                             .frame(width: 7, height: 7)
                         
-                        Text(stateStore.statusMessage)
+                        Text(formattedStatusText)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
