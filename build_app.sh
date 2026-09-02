@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "=== Terminating Any Running MITO Instances ==="
+pkill -9 -f "MITO" || true
+pkill -9 -f "Main.py" || true
+
 echo "=== Building MITO Swift Executable ==="
 cd "$(dirname "$0")/MITO-macOS"
 swift build -c release
