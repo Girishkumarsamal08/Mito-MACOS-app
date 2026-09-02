@@ -52,12 +52,12 @@ def _notify_bridge(state: str, text: str):
     except Exception:
         pass
 
-# Global recognizer instance with ultra-low latency thresholds
+# Global recognizer instance tuned for natural human speech capture
 recognizer = sr.Recognizer()
-recognizer.pause_threshold = 0.35
-recognizer.non_speaking_duration = 0.2
+recognizer.pause_threshold = 0.8
+recognizer.non_speaking_duration = 0.5
 recognizer.dynamic_energy_threshold = True
-recognizer.energy_threshold = 280
+recognizer.energy_threshold = 300
 
 # Cached Groq client for instant zero-overhead API requests
 groq_client = Groq(api_key=GroqAPIKey) if GroqAPIKey else None
