@@ -67,11 +67,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        print("[MITOApp] Auto-starting Python backend Main.py...")
+        print("[MITOApp] Auto-starting Python backend via run_mito.sh...")
         let projectDir = "/Users/girishkumarsamal/Downloads/MITO copy"
-        let venvPython = "\(projectDir)/.venv/bin/python3"
-        let darlingPython = "\(projectDir)/darling_env/bin/python3"
-        let mainScript = "\(projectDir)/Main.py"
+        let scriptPath = "\(projectDir)/run_mito.sh"
         
         let process = Process()
         process.currentDirectoryURL = URL(fileURLWithPath: projectDir)
@@ -79,15 +77,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         env["PYTHONUNBUFFERED"] = "1"
         process.environment = env
         
-        if FileManager.default.fileExists(atPath: venvPython) {
+        if FileManager.default.fileExists(atPath: scriptPath) {
+            process.executableURL = URL(fileURLWithPath: "/bin/bash")
+            process.arguments = [scriptPath]
+        } else {
+            let venvPython = "\(projectDir)/.venv/bin/python3"
+            let mainScript = "\(projectDir)/Main.py"
             process.executableURL = URL(fileURLWithPath: venvPython)
             process.arguments = [mainScript]
-        } else if FileManager.default.fileExists(atPath: darlingPython) {
-            process.executableURL = URL(fileURLWithPath: darlingPython)
-            process.arguments = [mainScript]
-        } else {
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.arguments = ["python3", mainScript]
         }
         
         do {
