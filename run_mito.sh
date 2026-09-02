@@ -1,7 +1,9 @@
 #!/bin/bash
-echo "=== Starting MITO Assistant Engine & GUI ==="
+echo "=== Starting MITO Assistant Backend Engine ==="
 CD_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$CD_DIR"
+
+export MITO_HEADLESS=1
 
 if [ -f "$CD_DIR/.venv/bin/python3" ]; then
     PYTHON_BIN="$CD_DIR/.venv/bin/python3"

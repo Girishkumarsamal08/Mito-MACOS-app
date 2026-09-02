@@ -237,18 +237,27 @@ def MainExecution():
     return True
 
 def FirstThread():
+    print("[MITO Engine] Listening loop started.")
     while True:
-        should_continue = MainExecution()
-        if not should_continue:
-            break
+        try:
+            should_continue = MainExecution()
+            if not should_continue:
+                break
+        except Exception as e:
+            print(f"[MITO MainExecution Error] {e}")
         sleep(0.1)
 
 def SecondThread():
-    app = QApplication(sys.argv)
-    window = SiriStyleOverlay()
-    window.show()
-    update_state("Idle")
-    sys.exit(app.exec_())
+    try:
+        app = QApplication(sys.argv)
+        window = SiriStyleOverlay()
+        window.show()
+        update_state("Idle")
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(f"[MITO GUI Warning] PyQt5 overlay bypassed: {e}")
+        while True:
+            sleep(1)
 
 # Correct main entry point
 if __name__ == "__main__":
@@ -259,5 +268,11 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[MITO BridgeServer Warning] {e}")
     core_engine.startup()
-    threading.Thread(target=FirstThread, daemon=True).start()
-    SecondThread()
+
+    is_headless = "--headless" in sys.argv or os.environ.get("MITO_HEADLESS") == "1"
+    if is_headless:
+        print("[MITO Engine] Running as backend server for native macOS application...")
+        FirstThread()
+    else:
+        threading.Thread(target=FirstThread, daemon=True).start()
+        SecondThread()
