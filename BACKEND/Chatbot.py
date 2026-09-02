@@ -59,6 +59,10 @@ def clean_response_text(text: str) -> str:
         else:
             text = text.replace("<think", "")
 
+    # Strip "Here's a thinking process:" or similar LLM reasoning intro headers
+    text = re.sub(r'Here\'?s a thinking process:?', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'thinking process:?', '', text, flags=re.IGNORECASE)
+
     # Remove code blocks, markdown symbols (*, _, #, >, `, etc.)
     text = re.sub(r'```[\s\S]*?```', '', text)
     text = re.sub(r'[`*_#>]', '', text)
