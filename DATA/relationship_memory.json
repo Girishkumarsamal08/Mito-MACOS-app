@@ -1,7 +1,17 @@
 {
     "preferences": {},
-    "history": [],
+    "history": [
+        {
+            "user": "HONEY",
+            "query": "Can you open whatsapp?",
+            "response": ""
+        },
+        {
+            "user": "HONEY",
+            "query": "Can i make your accent and the speed of the speech faster than now.",
+            "response": ""
+        }
+    ],
     "nickname": "Mito",
     "mood": "happy"
-  }
-  
+}

@@ -59,8 +59,15 @@ recognizer.non_speaking_duration = 0.5
 recognizer.dynamic_energy_threshold = True
 recognizer.energy_threshold = 300
 
-# Cached Groq client for instant zero-overhead API requests
-groq_client = Groq(api_key=GroqAPIKey) if GroqAPIKey else None
+def get_groq_client():
+    env = dotenv_values(".env")
+    key = os.getenv("GroqAPIKey") or env.get("GroqAPIKey")
+    if key:
+        try:
+            return Groq(api_key=key.strip())
+        except Exception:
+            pass
+    return None
 
 def get_microphone():
     env = dotenv_values(".env")
@@ -117,13 +124,14 @@ def SpeechRecognition():
         query = ""
 
         # 1. Try Groq Whisper API (Cached client + language="en" + temperature=0.0 -> sub-50ms execution)
-        if groq_client:
+        client = get_groq_client()
+        if client:
             try:
                 wav_data = audio.get_wav_data(convert_rate=16000, convert_width=2)
                 buffer = io.BytesIO(wav_data)
                 buffer.name = "audio.wav"
 
-                transcription = groq_client.audio.transcriptions.create(
+                transcription = client.audio.transcriptions.create(
                     file=buffer,
                     model="whisper-large-v3-turbo",
                     language="en",

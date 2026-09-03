@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "ESP32",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/HARDWARE/ESP32_MITO/**"
+      ],
+      "defines": [
+        "ARDUINO=10812",
+        "ESP32=1",
+        "ENABLE_DEBUG_LOGS=1"
+      ],
+      "compilerPath": "/usr/bin/clang",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "macos-clang-x64"
+    }
+  ],
+  "version": 4
+}

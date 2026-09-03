@@ -104,18 +104,24 @@ def MainExecution():
     from FRONTEND.GUI import update_label
     update_label(f"{Query}")
     
-    sleep_phrases = ["stop listening", "go to sleep", "you can sleep", "sleep baby", "good night", "sleep now"]
+    sleep_phrases = [
+        "will u shutdown baby", "will you shutdown baby", "shutdown baby", "will u shutdown",
+        "stop listening", "go to sleep", "you can sleep", "sleep baby", "good night", 
+        "sleep now", "turn off", "shut down", "shutdown", "stop assistant", "off assistant", 
+        "turn off assistant", "bye bye", "stop", "sleep"
+    ]
     screen_phrases = ["what am i doing", "see my screen", "look at my screen", "check my screen", "what i m doing", "what i am doing", "screen", "what am i working on", "see screen"]
     
     if any(phrase in Query.lower() for phrase in sleep_phrases):
-        sleep_response = "Good night Master! I'm going to sleep now. Just call me when you need me."
+        sleep_response = "yeah sure master! Magar aapko jab zaroorat padegi ,I'm right here Okay"
         core_engine.speaking()
         update_state("Speaking")
         TextToSpeech(sleep_response)
         core_engine.idle()
         update_state("Sleeping")
         update_label("Sleeping")
-        return True
+        print("[MITO] Shutdown command received. Terminating process...")
+        os._exit(0)
     elif any(phrase in Query.lower() for phrase in screen_phrases):
         from BACKEND.VisionEngine import analyze_screen
         core_engine.thinking()
