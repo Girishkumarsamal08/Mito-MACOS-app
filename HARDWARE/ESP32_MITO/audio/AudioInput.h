@@ -6,8 +6,10 @@
 #ifndef MITO_AUDIO_INPUT_H
 #define MITO_AUDIO_INPUT_H
 
+#include "../config.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 class AudioInput {
 public:

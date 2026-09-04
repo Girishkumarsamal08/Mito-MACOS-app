@@ -19,7 +19,7 @@ public enum MITOState: String, Codable, CaseIterable {
         case .idle:
             return "Idle"
         case .listening:
-            return "Thinking"
+            return "listening"
         case .thinking:
             return "Thinking"
         case .speaking:

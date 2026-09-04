@@ -6,6 +6,7 @@
 #ifndef MITO_AUDIO_OUTPUT_H
 #define MITO_AUDIO_OUTPUT_H
 
+#include "../config.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>

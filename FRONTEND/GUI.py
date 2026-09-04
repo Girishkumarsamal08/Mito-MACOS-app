@@ -68,11 +68,13 @@ class SiriStyleOverlay(QWidget):
 
     def set_state(self, state):
         state_map = {
-            "listening": "Thinking",
-            "Listening": "Thinking",
+            "listening": "listening",
+            "Listening": "listening",
         }
         actual_state = state_map.get(state, state)
         video_path = os.path.join(project_root, "Resources", f"{actual_state}.mp4")
+        if not os.path.exists(video_path):
+            video_path = os.path.join(project_root, "RESOURCES", f"{actual_state}.mp4")
 
         if not os.path.exists(video_path):
             print(f"Video not found: {video_path}")
