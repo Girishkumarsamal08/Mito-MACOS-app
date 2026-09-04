@@ -112,6 +112,12 @@ def SpeechRecognition():
         with mic as source:
             print("[MITO STT] Listening for speech...")
             _notify_bridge("listening", "Listening...")
+            try:
+                from FRONTEND.GUI import update_state, update_label
+                update_state("Listening")
+                update_label("Listening...")
+            except Exception:
+                pass
             audio = recognizer.listen(
                 source,
                 timeout=4,
@@ -120,6 +126,12 @@ def SpeechRecognition():
 
         print("[MITO STT] Transcribing audio...")
         _notify_bridge("thinking", "Transcribing...")
+        try:
+            from FRONTEND.GUI import update_state, update_label
+            update_state("Thinking")
+            update_label("Thinking...")
+        except Exception:
+            pass
 
         query = ""
 
