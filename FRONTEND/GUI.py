@@ -4,10 +4,18 @@ import cv2
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QObject
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
+
+class GUIBridge(QObject):
+    state_signal = pyqtSignal(str)
+    label_signal = pyqtSignal(str)
+    visibility_signal = pyqtSignal(bool)
+    quit_signal = pyqtSignal()
+
+gui_bridge = GUIBridge()
 
 class SiriStyleOverlay(QWidget):
     def __init__(self):
@@ -59,12 +67,34 @@ class SiriStyleOverlay(QWidget):
         self.label.setGeometry(20, 16, self.width() - 90, 40)
         self.label.raise_()
 
+        # Connect signals for thread safety
+        gui_bridge.state_signal.connect(self.set_state)
+        gui_bridge.label_signal.connect(self.update_text)
+        gui_bridge.visibility_signal.connect(self.set_visibility)
+        gui_bridge.quit_signal.connect(self.close_app)
+
         # Default state
         self.set_state("Idle")
 
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setAutoFillBackground(False)
         self.show()
+
+    def set_visibility(self, visible):
+        if visible:
+            self.show()
+            self.raise_()
+            self.activateWindow()
+        else:
+            self.hide()
+
+    def close_app(self):
+        if self.timer.isActive():
+            self.timer.stop()
+        if self.cap:
+            self.cap.release()
+        self.hide()
+        QApplication.quit()
 
     def set_state(self, state):
         if not state:
@@ -136,20 +166,15 @@ class SiriStyleOverlay(QWidget):
     def update_text(self, new_text):
         self.label.setText(new_text)
 
-    
-# Function to update the label of the existing overlay window
+
+# Thread-safe helper functions
 def update_label(text):
     try:
         from BACKEND.BridgeServer import broadcast_state
         broadcast_state("label", text)
     except Exception:
         pass
-
-    if hasattr(QApplication, "instance") and QApplication.instance():
-        for widget in QApplication.instance().allWidgets():
-            if isinstance(widget, SiriStyleOverlay):
-                widget.update_text(text)
-                break
+    gui_bridge.label_signal.emit(text)
 
 def update_state(state):
     try:
@@ -157,13 +182,13 @@ def update_state(state):
         broadcast_state(state)
     except Exception:
         pass
+    gui_bridge.state_signal.emit(state)
 
-    app = QApplication.instance()
-    if app:
-        for widget in app.allWidgets():
-            if isinstance(widget, SiriStyleOverlay):
-                widget.set_state(state)
-                break
+def set_overlay_visible(visible: bool):
+    gui_bridge.visibility_signal.emit(visible)
+
+def quit_overlay():
+    gui_bridge.quit_signal.emit()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

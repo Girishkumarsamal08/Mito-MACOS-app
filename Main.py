@@ -83,8 +83,11 @@ def MainExecution():
     ImageExecution = False
     ImageGenerationQuery = ""
     Answer = ""
+    from FRONTEND.GUI import set_overlay_visible, update_label, quit_overlay
+    set_overlay_visible(True)
     core_engine.listening()
     update_state("Listening")
+    update_label("Listening...")
     Query = SpeechRecognition()
 
     if not Query or not Query.strip():
@@ -101,7 +104,6 @@ def MainExecution():
         update_state("Idle")
         return True
 
-    from FRONTEND.GUI import update_label
     update_label(f"{Query}")
     
     sleep_phrases = [
@@ -115,12 +117,13 @@ def MainExecution():
     if any(phrase in Query.lower() for phrase in sleep_phrases):
         sleep_response = "yeah sure master! Magar aapko jab zaroorat padegi ,I'm right here Okay"
         core_engine.speaking()
-        update_state("Speaking")
         TextToSpeech(sleep_response)
         core_engine.idle()
         update_state("Sleeping")
         update_label("Sleeping")
+        set_overlay_visible(False)
         print("[MITO] Shutdown command received. Terminating process...")
+        quit_overlay()
         os._exit(0)
     elif any(phrase in Query.lower() for phrase in screen_phrases):
         from BACKEND.VisionEngine import analyze_screen
