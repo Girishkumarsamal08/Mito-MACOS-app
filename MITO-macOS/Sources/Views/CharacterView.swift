@@ -82,13 +82,22 @@ struct CharacterVideoPlayerView: NSViewRepresentable {
             player.removeAllItems()
             
             var videoURL: URL? = nil
+            let possibleNames = Array(Set([videoName, videoName.lowercased(), videoName.capitalized]))
             
-            if let bundlePath = Bundle.main.path(forResource: videoName, ofType: "mp4") {
-                videoURL = URL(fileURLWithPath: bundlePath)
-            } else {
-                let devPath = "/Users/girishkumarsamal/Downloads/MITO copy/Resources/\(videoName).mp4"
+            for name in possibleNames {
+                if let bundlePath = Bundle.main.path(forResource: name, ofType: "mp4") {
+                    videoURL = URL(fileURLWithPath: bundlePath)
+                    break
+                }
+                let devPath = "/Users/girishkumarsamal/Downloads/MITO copy/Resources/\(name).mp4"
                 if FileManager.default.fileExists(atPath: devPath) {
                     videoURL = URL(fileURLWithPath: devPath)
+                    break
+                }
+                let altDevPath = "/Users/girishkumarsamal/Downloads/MITO copy/RESOURCES/\(name).mp4"
+                if FileManager.default.fileExists(atPath: altDevPath) {
+                    videoURL = URL(fileURLWithPath: altDevPath)
+                    break
                 }
             }
             
