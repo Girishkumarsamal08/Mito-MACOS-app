@@ -67,17 +67,41 @@ class SiriStyleOverlay(QWidget):
         self.show()
 
     def set_state(self, state):
+        if not state:
+            return
+        
+        clean_state = str(state).strip()
         state_map = {
             "listening": "listening",
             "Listening": "listening",
+            "thinking": "Thinking",
+            "Thinking": "Thinking",
+            "speaking": "Speaking",
+            "Speaking": "Speaking",
+            "idle": "Idle",
+            "Idle": "Idle",
+            "sleeping": "Idle",
+            "Sleeping": "Idle",
+            "happy": "Happy",
+            "sad": "Sad",
         }
-        actual_state = state_map.get(state, state)
-        video_path = os.path.join(project_root, "Resources", f"{actual_state}.mp4")
-        if not os.path.exists(video_path):
-            video_path = os.path.join(project_root, "RESOURCES", f"{actual_state}.mp4")
+        target_name = state_map.get(clean_state, clean_state)
 
-        if not os.path.exists(video_path):
-            print(f"Video not found: {video_path}")
+        candidates = [
+            os.path.join(project_root, "Resources", f"{target_name}.mp4"),
+            os.path.join(project_root, "Resources", f"{target_name.lower()}.mp4"),
+            os.path.join(project_root, "Resources", f"{target_name.capitalize()}.mp4"),
+            os.path.join(project_root, "RESOURCES", f"{target_name}.mp4"),
+        ]
+
+        video_path = None
+        for cand in candidates:
+            if os.path.exists(cand):
+                video_path = cand
+                break
+
+        if not video_path:
+            print(f"[GUI Video Error] Video not found for state: {state}")
             return
 
         if self.cap:

@@ -54,13 +54,30 @@ def remove_emojis(text: str) -> str:
 def play_audio_file(file_path: str) -> bool:
     if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
         try:
-            res = subprocess.run(["afplay", file_path], capture_output=True, timeout=20)
+            from FRONTEND.GUI import update_state, update_label
+            update_state("Speaking")
+            update_label("Speaking...")
+            res = subprocess.run(["afplay", file_path], capture_output=True, timeout=30)
+            update_state("Idle")
+            update_label("Hey MITO")
             return res.returncode == 0
         except subprocess.TimeoutExpired:
             print("[MITO TTS] Audio playback finished or timed out.")
+            try:
+                from FRONTEND.GUI import update_state, update_label
+                update_state("Idle")
+                update_label("Hey MITO")
+            except Exception:
+                pass
             return True
         except Exception as e:
             print(f"[MITO TTS Playback Error] {e}")
+            try:
+                from FRONTEND.GUI import update_state, update_label
+                update_state("Idle")
+                update_label("Hey MITO")
+            except Exception:
+                pass
     return False
 
 # ---------- 1. Free HD Neural Expressive Voice Engine (ChatGPT Realtime Quality) ----------
