@@ -10,11 +10,11 @@ import time
 import pyaudio
 from dotenv import load_dotenv, dotenv_values
 
-from google import genai
-from google.genai import types # type: ignore
+from google import genai  # type: ignore
+from google.genai import types  # type: ignore
 
-from AURA.aura_controller import AURAController
-from FRONTEND.GUI import update_state, update_label
+from AURA.aura_controller import AURAController  # type: ignore
+from FRONTEND.GUI import update_state, update_label  # type: ignore
 
 # Load environment variables cleanly
 load_dotenv()

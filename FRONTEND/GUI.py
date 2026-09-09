@@ -1,10 +1,10 @@
 import sys
 import os
-import cv2
-import numpy as np
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton
-from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QObject
+import cv2  # type: ignore
+import numpy as np  # type: ignore
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton  # type: ignore
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage  # type: ignore
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QObject  # type: ignore
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
