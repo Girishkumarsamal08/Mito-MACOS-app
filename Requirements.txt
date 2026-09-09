@@ -15,4 +15,7 @@ pygame
 edge-tts
 PyQt5
 webdriver-manager
+google-genai
+pyaudio
+
 

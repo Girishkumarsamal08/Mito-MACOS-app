@@ -102,8 +102,8 @@ class SiriStyleOverlay(QWidget):
         
         clean_state = str(state).strip()
         state_map = {
-            "listening": "listening",
-            "Listening": "listening",
+            "listening": "Idle",
+            "Listening": "Idle",
             "thinking": "Thinking",
             "Thinking": "Thinking",
             "speaking": "Speaking",
@@ -113,9 +113,13 @@ class SiriStyleOverlay(QWidget):
             "sleeping": "Idle",
             "Sleeping": "Idle",
             "happy": "Happy",
+            "Happy": "Happy",
             "sad": "Sad",
+            "Sad": "Sad",
         }
         target_name = state_map.get(clean_state, clean_state)
+        if target_name in ["listening", "Listening"]:
+            target_name = "Idle"
 
         candidates = [
             os.path.join(project_root, "Resources", f"{target_name}.mp4"),

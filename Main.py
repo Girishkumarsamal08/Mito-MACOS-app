@@ -10,6 +10,7 @@ from BACKEND.SpeechToText import SpeechRecognition
 from BACKEND.TextToSpeech import TextToSpeech
 from BACKEND.Chatbot import ChatBot
 from BACKEND.FileAccess import list_all_files
+from BACKEND.GeminiLive import GeminiLiveEngine
 from dotenv import dotenv_values, load_dotenv
 from asyncio import run
 from time import sleep
@@ -249,16 +250,27 @@ def MainExecution():
 
     return True
 
-def FirstThread():
-    print("[MITO Engine] Listening loop started.")
-    while True:
+def start_gemini_live():
+    import asyncio
+    
+    engine = GeminiLiveEngine()
+    def run_engine():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
-            should_continue = MainExecution()
-            if not should_continue:
-                break
+            loop.run_until_complete(engine.run())
         except Exception as e:
-            print(f"[MITO MainExecution Error] {e}")
-        sleep(0.1)
+            print(f"[MITO Gemini Live Error] {e}")
+        finally:
+            loop.close()
+
+    t = threading.Thread(target=run_engine, daemon=True)
+    t.start()
+    return engine
+
+def FirstThread():
+    print("[MITO Engine] Gemini Live Engine thread starting...")
+    start_gemini_live()
 
 def SecondThread():
     try:
@@ -274,7 +286,7 @@ def SecondThread():
 
 # Correct main entry point
 if __name__ == "__main__":
-    print("[MITO] Assistant started.")
+    print("[MITO] Assistant started with Gemini Live Native Audio Architecture.")
     try:
         from BACKEND.BridgeServer import start_bridge_server_thread
         start_bridge_server_thread()
@@ -285,7 +297,9 @@ if __name__ == "__main__":
     is_headless = "--headless" in sys.argv or os.environ.get("MITO_HEADLESS") == "1"
     if is_headless:
         print("[MITO Engine] Running as backend server for native macOS application...")
-        FirstThread()
+        engine = GeminiLiveEngine()
+        import asyncio
+        asyncio.run(engine.run())
     else:
-        threading.Thread(target=FirstThread, daemon=True).start()
+        start_gemini_live()
         SecondThread()

@@ -39,6 +39,24 @@
 #define MITO_SERVER_IP      "192.168.1.100" // Replace with your Mac's IP address
 #define MITO_SERVER_PORT    8765
 #define MITO_SERVER_PATH    "/"
+#define DESKTOP_HOST        MITO_SERVER_IP
+#define DESKTOP_PORT        MITO_SERVER_PORT
+#define DESKTOP_RECONNECT_MS 5000
+#define DESKTOP_HEARTBEAT_MS 30000
+
+// ============================================================================
+// HARDWARE BUTTON & DEBOUNCE CONFIGURATION
+// ============================================================================
+
+#define BUTTON_DEBOUNCE_MS   50
+#define BUTTON_LONG_PRESS_MS 1000
+
+// ============================================================================
+// OPTIONAL NEOPIXEL CONFIGURATION
+// ============================================================================
+
+#define NEOPIXEL_COUNT       6     // 6 RGB LEDs (as specified in Tinkered hardware model)
+#define NEOPIXEL_BRIGHTNESS  50
 
 // ============================================================================
 // DISPLAY CONFIGURATION
@@ -47,6 +65,8 @@
 // Display Resolution (Configurable for various LCD screens)
 #define DISPLAY_WIDTH       240
 #define DISPLAY_HEIGHT      240
+#define TFT_WIDTH           DISPLAY_WIDTH
+#define TFT_HEIGHT          DISPLAY_HEIGHT
 #define DISPLAY_ROTATION    0    // 0, 1, 2, 3
 
 // Target Frame Rate for MITO Animation Loop
@@ -64,6 +84,9 @@
 #define AUDIO_BITS_PER_SAMPLE 16
 #define AUDIO_CHANNELS      1     // Mono audio
 
+#define I2S_SAMPLE_RATE     AUDIO_SAMPLE_RATE
+#define I2S_BUFFER_SAMPLES  512
+
 #define DEFAULT_VOLUME      80    // 0 - 100
 
 // ============================================================================
@@ -71,6 +94,7 @@
 // ============================================================================
 
 #define SERIAL_BAUD_RATE    115200
+#define SERIAL_BAUD         SERIAL_BAUD_RATE
 #define ENABLE_DEBUG_LOGS   true
 
 #if ENABLE_DEBUG_LOGS

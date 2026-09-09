@@ -34,10 +34,21 @@
 #define PIN_I2S_SPK_DOUT    7     // Data Out (DIN)
 
 // ============================================================================
-// STATUS HARDWARE (LEDs / Touch Buttons)
+// STATUS HARDWARE & BUTTON CONTROLS
 // ============================================================================
 
 #define PIN_STATUS_LED      2     // Built-in LED for connectivity status
+#define PIN_STAT_LED        PIN_STATUS_LED
 #define PIN_WAKE_BUTTON     0     // Physical wake / action button (Boot button)
+#define PIN_BTN_MAIN        PIN_WAKE_BUTTON
+#define PIN_BTN_ACTION      13    // Auxiliary action button
+
+// ============================================================================
+// OPTIONAL HARDWARE PERIPHERALS (NeoPixel & Camera UART)
+// ============================================================================
+
+#define PIN_NEO_DATA        47    // NeoPixel RGB Data Pin
+#define PIN_CAM_TX          17    // Camera UART TX Pin
+#define PIN_CAM_RX          18    // Camera UART RX Pin
 
 #endif // MITO_PINS_H
