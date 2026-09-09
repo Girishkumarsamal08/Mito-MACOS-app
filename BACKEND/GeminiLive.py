@@ -164,6 +164,14 @@ class GeminiLiveEngine:
                 if server_content is None:
                     continue
 
+                # Handle user speech transcription events from Live API
+                if server_content.user_turn:
+                    for part in server_content.user_turn.parts:
+                        if part.text:
+                            print(f"[User Input Transcribed] {part.text}")
+                            update_state("Listening")
+                            update_label(f"Hearing: {part.text}")
+
                 # Handle instant interruption event from Live API
                 if server_content.interrupted:
                     self.clear_playback_buffer()
@@ -228,6 +236,8 @@ class GeminiLiveEngine:
         
         config = types.LiveConnectConfig(
             response_modalities=[types.Modality.AUDIO],
+            input_audio_transcription=types.AudioTranscriptionConfig(),
+            output_audio_transcription=types.AudioTranscriptionConfig(),
             speech_config=types.SpeechConfig(
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")
