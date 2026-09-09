@@ -21,7 +21,7 @@ load_dotenv()
 env_vars = dotenv_values(".env")
 
 MEMORY_FILE = "Data/relationship_memory.json"
-MODEL_ID = "gemini-2.5-flash-native-audio-preview-12-2025"
+MODEL_ID = "gemini-2.5-flash-native-audio-latest"
 
 # System Instruction for MITO Persona
 SYSTEM_INSTRUCTION = """
@@ -68,7 +68,7 @@ class GeminiLiveEngine:
         self.mic_rate = 16000
         self.speaker_channels = 1
         self.speaker_rate = 24000
-        self.chunk_size = 512  # ~32 ms at 16kHz
+        self.chunk_size = 1024  # ~64 ms at 16kHz
         
         self.pyaudio_instance = None
         self.mic_stream = None
@@ -143,9 +143,9 @@ class GeminiLiveEngine:
                     None, self.mic_stream.read, self.chunk_size, False
                 )
                 if pcm_data and len(pcm_data) > 0:
-                    media_blob = types.Blob(data=pcm_data, mime_type="audio/pcm")
-                    realtime_input = types.LiveClientRealtimeInput(media_chunks=[media_blob])
-                    await session.send(input=realtime_input)
+                    await session.send_realtime_input(
+                        audio=types.Blob(data=pcm_data, mime_type="audio/pcm;rate=16000")
+                    )
             except asyncio.CancelledError:
                 break
             except Exception as e:
