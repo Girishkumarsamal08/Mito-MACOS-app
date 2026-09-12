@@ -21,7 +21,11 @@ load_dotenv()
 env_vars = dotenv_values(".env")
 
 MEMORY_FILE = "Data/relationship_memory.json"
-MODEL_ID = "gemini-2.5-flash-native-audio-latest"
+MODEL_CANDIDATES = [
+    "gemini-2.5-flash-native-audio-latest",
+    "gemini-2.0-flash-exp",
+    "gemini-2.0-flash"
+]
 
 # System Instruction for MITO Persona
 SYSTEM_INSTRUCTION = """
@@ -35,15 +39,51 @@ Key Guidelines:
 5. Pacing: Keep casual responses concise and conversational so dialogue flows smoothly without long monologue blocks.
 """
 
-def load_memory():
+def get_system_instruction(is_phone_call: bool = False, call_context: dict | None = None) -> str:
+    prompt = SYSTEM_INSTRUCTION
+    if is_phone_call:
+        reason = call_context.get("reason", "important reminder") if call_context else "important reminder"
+        prompt += f"""
+
+CRITICAL CALL CONTEXT:
+You are currently on an outbound PHONE CALL to the user's mobile phone number.
+Reason for call: {reason}
+- Greet the user naturally when they answer (e.g. "Hey sir... you free for a second?" or "Haan sir... sorry to call you suddenly").
+- Do NOT say "Hello, I am an AI assistant" or sound like a corporate telemarketer.
+- State your reason warmly and concisely in natural Hinglish/Hindi/English.
+- Respect the user's independence. If they say they are busy, reply warmly (e.g. "Haan okay sir, take your time") and wrap up cleanly.
+"""
+    else:
+        try:
+            from BACKEND.CallManager import CallManager
+            cm = CallManager()
+            recent = cm.get_recent_unanswered_call(max_age_hours=12.0)
+            if recent:
+                prompt += f"""
+
+MISSED CALL CONTEXT:
+You recently tried calling the user's mobile phone {recent['age_minutes']} minutes ago for reason '{recent['reason']}', but the user did not pick up.
+If appropriate in conversation, you may naturally mention this (e.g. "Hmm... haan sir. I called you a little while ago... you didn't pick up. Were you busy?").
+Generate this response naturally based on context. Do NOT sound possessive or clingy.
+"""
+        except Exception as e:
+            print(f"[GeminiLive System Instruction Context Warning] {e}")
+    return prompt
+
+
+def load_memory() -> dict:
     if not os.path.exists(MEMORY_FILE):
         return {"preferences": {}, "history": [], "nickname": "Mito", "mood": "happy"}
     try:
         with open(MEMORY_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            if isinstance(data, dict):
+                if "history" not in data or not isinstance(data["history"], list):
+                    data["history"] = []
+                return data
     except Exception as e:
         print(f"[MITO Memory Error] {e}")
-        return {"preferences": {}, "history": [], "nickname": "Mito", "mood": "happy"}
+    return {"preferences": {}, "history": [], "nickname": "Mito", "mood": "happy"}
 
 def save_memory(memory):
     try:
@@ -137,9 +177,13 @@ class GeminiLiveEngine:
     async def _mic_stream_loop(self, session):
         """Continuous low-latency microphone audio streaming coroutine."""
         print("[MITO] Microphone audio streaming started.")
+        loop = asyncio.get_running_loop()
         while self.is_running:
             try:
-                pcm_data = await self.loop.run_in_executor(
+                if not self.mic_stream:
+                    await asyncio.sleep(0.1)
+                    continue
+                pcm_data = await loop.run_in_executor(
                     None, self.mic_stream.read, self.chunk_size, False
                 )
                 if pcm_data and len(pcm_data) > 0:
@@ -202,10 +246,17 @@ class GeminiLiveEngine:
                                     break
                                 
                                 if aura_res.remember:
-                                    self.memory["history"].append({
-                                        "timestamp": time.time(),
-                                        "text": text_content
-                                    })
+                                    history = self.memory.get("history")
+                                    if isinstance(history, list):
+                                        history.append({
+                                            "timestamp": time.time(),
+                                            "text": text_content
+                                        })
+                                    else:
+                                        self.memory["history"] = [{
+                                            "timestamp": time.time(),
+                                            "text": text_content
+                                        }]
                                     save_memory(self.memory)
 
                 if server_content.turn_complete:
@@ -244,17 +295,19 @@ class GeminiLiveEngine:
                 )
             ),
             system_instruction=types.Content(
-                parts=[types.Part.from_text(text=SYSTEM_INSTRUCTION)]
+                parts=[types.Part.from_text(text=get_system_instruction())]
             ),
             enable_affective_dialog=True
         )
 
+        candidate_idx = 0
         while self.is_running:
+            model_id = MODEL_CANDIDATES[candidate_idx % len(MODEL_CANDIDATES)]
             try:
-                print(f"[MITO] Live session connecting to model: {MODEL_ID}")
-                async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
+                print(f"[MITO] Live session connecting to model: {model_id}")
+                async with client.aio.live.connect(model=model_id, config=config) as session:
                     self.session = session
-                    print("[MITO] Live session connected!")
+                    print(f"[MITO] Live session connected using {model_id}!")
                     update_state("Idle")
                     update_label("Hey MITO")
 
@@ -272,7 +325,8 @@ class GeminiLiveEngine:
                 print("[MITO] Gemini Live session cancelled.")
                 break
             except Exception as e:
-                print(f"[MITO Connection Error] {e}. Retrying in 3 seconds...")
+                print(f"[MITO Connection Error with {model_id}] {e}. Retrying with fallback model in 3 seconds...")
+                candidate_idx += 1
                 await asyncio.sleep(3)
 
     def stop(self):

@@ -53,19 +53,21 @@ def start_assistant():
 
 def resource_path(relative_path):
     """ Get absolute path to resource inside .app or script """
-    try:
-        base_path = sys._MEIPASS  # set by PyInstaller
-    except Exception:
-        base_path = os.path.abspath(".")
-
+    base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
     return os.path.join(base_path, relative_path)
 
 
-def load_memory():
+def load_memory() -> dict:
     if not os.path.exists(MEMORY_FILE):
         return {"preferences": {}, "history": [], "nickname": "Mito", "mood": "happy"}
-    with open(MEMORY_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                return data
+    except Exception:
+        pass
+    return {"preferences": {}, "history": [], "nickname": "Mito", "mood": "happy"}
 
 def save_memory(memory):
     with open(MEMORY_FILE, "w", encoding="utf-8") as f:
@@ -240,11 +242,19 @@ def MainExecution():
 
     # ---------- AURA MEMORY ----------
     if aura_result.remember:
-        memory["history"].append({
-            "user": Username,
-            "query": Query,
-            "response": Answer
-        })
+        history = memory.get("history")
+        if isinstance(history, list):
+            history.append({
+                "user": Username,
+                "query": Query,
+                "response": Answer
+            })
+        else:
+            memory["history"] = [{
+                "user": Username,
+                "query": Query,
+                "response": Answer
+            }]
         save_memory(memory)
         return True
 
