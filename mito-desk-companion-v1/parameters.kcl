@@ -1,0 +1,49 @@
+// MITO editable parameters
+// REQUIRES_PHYSICAL_MEASUREMENT values are provisional photo-derived CAD inputs.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+export mitoHeight = 118mm // Provisional target, not a measured toy dimension.
+export mitoWidth = 94mm // Provisional envelope limit; not forced silhouette width.
+export mitoDepth = 66mm // Provisional envelope limit; not forced silhouette depth.
+export wallThickness = 2mm // Nominal cavity allowance; not a constant-normal offset.
+export assemblyClearance = 0.3mm // Provisional fit allowance; requires a print test.
+export headWidth = mitoWidth * 0.70212766 // REQUIRES_PHYSICAL_MEASUREMENT
+export headHeight = mitoHeight * 0.5 // REQUIRES_PHYSICAL_MEASUREMENT
+export headDepth = mitoDepth * 0.84848485 // REQUIRES_PHYSICAL_MEASUREMENT
+export faceOpeningWidth = headWidth * 0.76 // REQUIRES_PHYSICAL_MEASUREMENT
+export faceOpeningHeight = headHeight * 0.74 // REQUIRES_PHYSICAL_MEASUREMENT
+export faceOpeningDepth = 5mm // REQUIRES_PHYSICAL_MEASUREMENT: aperture cutter rear stop from seam.
+export faceCornerRadius = 21mm // REQUIRES_PHYSICAL_MEASUREMENT
+export buttonDiameter = 16mm // REQUIRES_PHYSICAL_MEASUREMENT
+export buttonProjection = 6mm // REQUIRES_PHYSICAL_MEASUREMENT
+export backpackWidth = 35mm // REQUIRES_PHYSICAL_MEASUREMENT
+export backpackHeight = 29mm // REQUIRES_PHYSICAL_MEASUREMENT
+export backpackDepth = 12mm // REQUIRES_PHYSICAL_MEASUREMENT
+export backHoleDiameter = 4.5mm // REQUIRES_PHYSICAL_MEASUREMENT
+export backHoleSpacing = 25mm // REQUIRES_PHYSICAL_MEASUREMENT
+export bodyWidth = headWidth * 0.79 // REQUIRES_PHYSICAL_MEASUREMENT
+export bodyHeight = mitoHeight * 0.3220339 // REQUIRES_PHYSICAL_MEASUREMENT
+export bodyDepth = 34mm // REQUIRES_PHYSICAL_MEASUREMENT
+export sleeveWidth = 16mm // REQUIRES_PHYSICAL_MEASUREMENT
+export sleeveHeight = 26mm // REQUIRES_PHYSICAL_MEASUREMENT
+export sleeveDepth = 23mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handWidth = 11mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handHeight = 16mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handDepth = 13mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handPegDiameter = 3.9mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handMountSpacing = 25mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handCenterY = -23mm // REQUIRES_PHYSICAL_MEASUREMENT
+export handCenterZ = -8mm // REQUIRES_PHYSICAL_MEASUREMENT: relative to torso center.
+export footWidth = 17mm // REQUIRES_PHYSICAL_MEASUREMENT
+export footDepth = 27mm // REQUIRES_PHYSICAL_MEASUREMENT
+export footHeight = 14mm // REQUIRES_PHYSICAL_MEASUREMENT
+export legDiameter = 20mm // REQUIRES_PHYSICAL_MEASUREMENT
+export legHeight = 8mm // REQUIRES_PHYSICAL_MEASUREMENT
+export topMountDiameter = 7mm // REQUIRES_PHYSICAL_MEASUREMENT
+export topMountHeight = 2mm // REQUIRES_PHYSICAL_MEASUREMENT
+export topMountHoleDiameter = 2.5mm // REQUIRES_PHYSICAL_MEASUREMENT
+export headCenterZ = mitoHeight - topMountHeight - (headHeight / 2)
+export bodyCenterZ = 40mm // REQUIRES_PHYSICAL_MEASUREMENT
+export footSpacing = 24mm // REQUIRES_PHYSICAL_MEASUREMENT
+export neckDiameter = 24mm // REQUIRES_PHYSICAL_MEASUREMENT
+export neckHeight = 5mm // REQUIRES_PHYSICAL_MEASUREMENT

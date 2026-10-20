@@ -1,0 +1,37 @@
+// MITO backpack
+// Rounded separate rear shell with paired through-holes.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import backpackWidth, backpackHeight, backpackDepth, wallThickness, backHoleDiameter, backHoleSpacing from "parameters.kcl"
+import roundRect, cylinder from "features.kcl"
+outerProfile = roundRect(
+  width = backpackWidth,
+  height = backpackHeight,
+  cornerRadius = 7mm,
+  plane = XZ,
+)
+outer = extrude(outerProfile, length = -backpackDepth)
+innerProfile = roundRect(
+  width = backpackWidth - (2 * wallThickness),
+  height = backpackHeight - (2 * wallThickness),
+  cornerRadius = 5mm,
+  plane = offsetPlane(XZ, offset = 1mm),
+)
+inner = extrude(innerProfile, length = -(backpackDepth - wallThickness + 1mm))
+hollow = subtract(outer, tools = [inner])
+leftBore = cylinder(diameter = backHoleDiameter, length = backpackDepth + 2mm, plane = -XZ)
+  |> translate(
+       x = -backHoleSpacing / 2,
+       y = 0mm,
+       z = -8mm,
+       global = true,
+     )
+rightBore = clone(leftBore)
+  |> translate(
+       x = backHoleSpacing,
+       y = 0mm,
+       z = 0mm,
+       global = true,
+     )
+backpack = subtract(hollow, tools = [leftBore, rightBore])
+  |> appearance(color = "#E4E4DC", roughness = 25)

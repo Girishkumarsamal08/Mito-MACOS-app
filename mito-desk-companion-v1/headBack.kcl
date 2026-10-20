@@ -1,0 +1,27 @@
+// MITO head back
+// Rear hood shell and provisional drilled crown mounting pad.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import headWidth, headHeight, headDepth, wallThickness, assemblyClearance, topMountDiameter, topMountHeight, topMountHoleDiameter, neckDiameter from "parameters.kcl"
+import softVolume, halfSpace, cylinder from "features.kcl"
+outer = softVolume(
+  width = headWidth,
+  depth = headDepth,
+  height = headHeight,
+  crown = topMountDiameter,
+)
+inner = softVolume(
+  width = headWidth - (2 * wallThickness),
+  depth = headDepth - (2 * wallThickness),
+  height = headHeight - (2 * wallThickness),
+  crown = topMountDiameter - wallThickness,
+)
+mount = cylinder(diameter = topMountDiameter, length = topMountHeight + wallThickness, plane = offsetPlane(XY, offset = headHeight / 2 - wallThickness))
+mountedOuter = union([outer, mount])
+neckSocket = cylinder(diameter = neckDiameter, length = 8mm, plane = offsetPlane(XY, offset = -headHeight / 2 - 1mm))
+hollow = subtract(mountedOuter, tools = [inner, neckSocket])
+rearTool = halfSpace(front = false, gap = assemblyClearance, size = headWidth * 2)
+mounted = intersect([hollow, rearTool])
+mountBore = cylinder(diameter = topMountHoleDiameter, length = topMountHeight + 3 * wallThickness, plane = offsetPlane(XY, offset = headHeight / 2 - (2 * wallThickness)))
+headBack = subtract(mounted, tools = [mountBore])
+  |> appearance(color = "#E8E8E2", roughness = 25)

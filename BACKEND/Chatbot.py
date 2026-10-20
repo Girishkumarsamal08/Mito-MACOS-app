@@ -44,7 +44,7 @@ client = Groq(api_key=GroqAPIKey)
 
 import re
 
-def clean_response_text(text: str) -> str:
+def clean_response_text(text: str | None) -> str:
     if not text:
         return ""
     
@@ -87,6 +87,16 @@ def ChatBot(query):
         'openai/gpt-oss-120b'
     ]
 
+    call_context_info = ""
+    try:
+        from BACKEND.CallManager import CallManager
+        cm = CallManager()
+        recent = cm.get_recent_unanswered_call(max_age_hours=12.0)
+        if recent:
+            call_context_info = f"\nMISSED CALL MEMORY: You called the user's mobile phone {recent['age_minutes']} minutes ago for reason '{recent['reason']}', but they did not pick up. You may naturally reference this if relevant, e.g. 'Master, maine thodi der pehle call kiya tha... aapne uthaya nahi'."
+    except Exception:
+        pass
+
     system_prompt = f'''
 You are {Assistantname}, a warm, affectionate, human-like AI companion.
 You speak naturally in cute, friendly Hinglish, Hindi, and English.
@@ -95,6 +105,7 @@ Always address the user as "Master" or "Honey".
 Be caring, playful, and conversational (e.g. use phrases like "Master, aap kya kar rahe ho?", "Oh acha thik h!").
 
 {person_info}
+{call_context_info}
 
 CRITICAL RULES:
 1. FEMALE GENDER RULE (STRICT): You are a FEMALE companion (Girl). ALWAYS use female Hindi verbs and endings! Use "karungi" (NEVER "karunga"), "dekhungi" (NEVER "dekhunga"), "samjhungi" (NEVER "samjhunga"), "aaungi" (NEVER "aaunga"), "bataungi" (NEVER "bataunga"), "karti hu" (NEVER "karta hu"), "ho gayi" (NEVER "ho gaya"). NEVER use male verbs.
@@ -124,7 +135,7 @@ Keep responses concise, warm, and natural.
                 max_tokens=512
             )
 
-            raw_reply = completion.choices[0].message.content
+            raw_reply = completion.choices[0].message.content or ""
             return clean_response_text(raw_reply)
 
         except Exception as e:

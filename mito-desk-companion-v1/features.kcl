@@ -1,0 +1,176 @@
+// MITO reusable curved features
+// Repeated profiles driven by dimensions; all sketch variables are constrained.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+export fn ovalSection(width: number(mm), depth: number(mm), elevation: number(mm)) {
+  profile = sketch(on = offsetPlane(XY, offset = elevation)) {
+    perimeter = circle(center = [var 0mm, var 0mm], start = [var 10mm, var 0mm])
+    coincident([perimeter.center, ORIGIN])
+    radius(perimeter) == width / 2
+    horizontal([perimeter.center, perimeter.start])
+  }
+  outline = region(segments = [profile.perimeter])
+  result = scale(
+    outline,
+    x = 1,
+    y = depth / width,
+    z = 1,
+    global = true,
+  )
+  hide(profile)
+  return result
+}
+export fn softVolume(width: number(mm), depth: number(mm), height: number(mm), crown: number(mm)) {
+  bottom = ovalSection(width = width * 0.60, depth = depth * 0.60, elevation = -height / 2)
+  lower = ovalSection(width = width * 0.91, depth = depth * 0.91, elevation = -height * 0.43)
+  belly = ovalSection(width = width, depth = depth, elevation = -height * 0.25)
+  middle = ovalSection(width = width * 0.94, depth = depth * 0.98, elevation = 0mm)
+  upper = ovalSection(width = width * 0.78, depth = depth * 0.84, elevation = height * 0.25)
+  shoulder = ovalSection(width = width * 0.48, depth = depth * 0.53, elevation = height * 0.43)
+  top = ovalSection(width = crown, depth = crown * (depth / width), elevation = height / 2)
+  result = loft(
+    [
+      bottom,
+      lower,
+      belly,
+      middle,
+      upper,
+      shoulder,
+      top
+    ],
+    vDegree = 2,
+    bezApproximateRational = true,
+  )
+  hide([
+    bottom,
+    lower,
+    belly,
+    middle,
+    upper,
+    shoulder,
+    top
+  ])
+  return result
+}
+export fn roundRect(width: number(mm), height: number(mm), cornerRadius: number(mm), plane) {
+  profile = sketch(on = plane) {
+    bottom = line(start = [var -12mm, var -20mm], end = [var 12mm, var -20mm])
+    lowerRight = arc(start = [var 12mm, var -20mm], end = [var 26mm, var -6mm], center = [var 12mm, var -6mm])
+    right = line(start = [var 26mm, var -6mm], end = [var 26mm, var 6mm])
+    upperRight = arc(start = [var 26mm, var 6mm], end = [var 12mm, var 20mm], center = [var 12mm, var 6mm])
+    top = line(start = [var 12mm, var 20mm], end = [var -12mm, var 20mm])
+    upperLeft = arc(start = [var -12mm, var 20mm], end = [var -26mm, var 6mm], center = [var -12mm, var 6mm])
+    left = line(start = [var -26mm, var 6mm], end = [var -26mm, var -6mm])
+    lowerLeft = arc(start = [var -26mm, var -6mm], end = [var -12mm, var -20mm], center = [var -12mm, var -6mm])
+    coincident([bottom.end, lowerRight.start])
+    coincident([lowerRight.end, right.start])
+    coincident([right.end, upperRight.start])
+    coincident([upperRight.end, top.start])
+    coincident([top.end, upperLeft.start])
+    coincident([upperLeft.end, left.start])
+    coincident([left.end, lowerLeft.start])
+    coincident([lowerLeft.end, bottom.start])
+    horizontal(bottom)
+    horizontal(top)
+    vertical(left)
+    vertical(right)
+    tangent([bottom, lowerRight])
+    tangent([lowerRight, right])
+    tangent([right, upperRight])
+    tangent([upperRight, top])
+    tangent([top, upperLeft])
+    tangent([upperLeft, left])
+    tangent([left, lowerLeft])
+    tangent([lowerLeft, bottom])
+    radius(lowerRight) == cornerRadius
+    equalRadius([
+      lowerRight,
+      upperRight,
+      upperLeft,
+      lowerLeft
+    ])
+    distance([bottom.start, bottom.end]) == width - (2 * cornerRadius)
+    distance([right.start, right.end]) == height - (2 * cornerRadius)
+    horizontalDistance([ORIGIN, bottom.start]) == -width / 2 + cornerRadius
+    verticalDistance([ORIGIN, bottom.start]) == -height / 2
+  }
+  result = region(segments = [profile.bottom, profile.lowerRight], intersectionIndex = -1, direction = CCW)
+  hide(profile)
+  return result
+}
+export fn cylinder(diameter: number(mm), length: number(mm), plane) {
+  boreRadius = diameter / 2
+  profile = sketch(on = plane) {
+    perimeter = circle(center = [var 0mm, var 0mm], start = [var 5mm, var 0mm])
+    coincident([perimeter.center, ORIGIN])
+    radius(perimeter) == boreRadius
+    horizontal([perimeter.center, perimeter.start])
+  }
+  result = extrude(region(segments = [profile.perimeter]), length = length)
+  hide(profile)
+  return result
+}
+export fn ovalHalf(width: number(mm), depth: number(mm), elevation: number(mm)) {
+  profile = sketch(on = offsetPlane(XY, offset = elevation)) {
+    curve = arc(start = [var -10mm, var 0mm], end = [var 10mm, var 0mm], center = [var 0mm, var 0mm])
+    seam = line(start = [var 10mm, var 0mm], end = [var -10mm, var 0mm])
+    coincident([curve.center, ORIGIN])
+    coincident([curve.end, seam.start])
+    coincident([curve.start, seam.end])
+    horizontal(seam)
+    verticalDistance([ORIGIN, seam.start]) == 0mm
+    radius(curve) == width / 2
+  }
+  outline = region(segments = [profile.curve, profile.seam], intersectionIndex = -1, direction = CCW)
+  result = scale(
+    outline,
+    x = 1,
+    y = depth / width,
+    z = 1,
+    global = true,
+  )
+  hide(profile)
+  return result
+}
+export fn softHalf(width: number(mm), depth: number(mm), height: number(mm), crown: number(mm)) {
+  bottom = ovalHalf(width = width * 0.60, depth = depth * 0.60, elevation = -height / 2)
+  lower = ovalHalf(width = width * 0.91, depth = depth * 0.91, elevation = -height * 0.43)
+  belly = ovalHalf(width = width, depth = depth, elevation = -height * 0.25)
+  middle = ovalHalf(width = width * 0.94, depth = depth * 0.98, elevation = 0mm)
+  upper = ovalHalf(width = width * 0.78, depth = depth * 0.84, elevation = height * 0.25)
+  shoulder = ovalHalf(width = width * 0.48, depth = depth * 0.53, elevation = height * 0.43)
+  top = ovalHalf(width = crown, depth = crown * (depth / width), elevation = height / 2)
+  result = loft(
+    [
+      bottom,
+      lower,
+      belly,
+      middle,
+      upper,
+      shoulder,
+      top
+    ],
+    vDegree = 2,
+  )
+  return result
+}
+export fn halfSpace(front, gap: number(mm), size: number(mm)) {
+  profile = roundRect(
+    width = size * 2,
+    height = size * 2,
+    cornerRadius = 1mm,
+    plane = offsetPlane(XZ, offset = gap / 2),
+  )
+  tool = extrude(profile, length = size)
+  result = if front {
+    tool
+  } else {
+    rotate(
+      tool,
+      axis = Z,
+      angle = 180deg,
+      global = true,
+    )
+  }
+  return result
+}

@@ -1,0 +1,85 @@
+// MITO front torso envelope
+// Half-section lofts establish the maintenance seam before adding features.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import bodyWidth, bodyDepth, bodyHeight, sleeveWidth, sleeveDepth, sleeveHeight, legDiameter, legHeight, footSpacing, neckDiameter, neckHeight, assemblyClearance, wallThickness from "parameters.kcl"
+import softHalf, ovalHalf, ovalSection from "features.kcl"
+hem = ovalHalf(width = bodyWidth * 0.92, depth = bodyDepth * 0.95, elevation = -bodyHeight / 2)
+belly = ovalHalf(width = bodyWidth, depth = bodyDepth, elevation = -bodyHeight * 0.30)
+chest = ovalHalf(width = bodyWidth * 0.88, depth = bodyDepth * 0.94, elevation = bodyHeight * 0.05)
+shoulders = ovalHalf(width = bodyWidth * 0.67, depth = bodyDepth * 0.76, elevation = bodyHeight * 0.37)
+collar = ovalHalf(width = neckDiameter, depth = neckDiameter, elevation = bodyHeight / 2)
+torso = loft([hem, belly, chest, shoulders, collar], vDegree = 2)
+legProfile = ovalHalf(width = legDiameter, depth = legDiameter, elevation = -bodyHeight / 2 - legHeight + 1mm)
+legSeed = extrude(legProfile, length = legHeight + 6mm)
+leftLeg = translate(
+  legSeed,
+  x = -footSpacing / 2,
+  y = -0.05mm,
+  z = 0mm,
+  global = true,
+)
+rightLeg = clone(leftLeg)
+  |> translate(
+       x = footSpacing,
+       y = 0mm,
+       z = 0mm,
+       global = true,
+     )
+neckProfile = ovalHalf(width = neckDiameter - (2 * assemblyClearance), depth = neckDiameter - (2 * assemblyClearance), elevation = bodyHeight / 2 - 2mm)
+neck = extrude(neckProfile, length = neckHeight)
+  |> translate(
+       x = 0mm,
+       y = -0.05mm,
+       z = 0mm,
+       global = true,
+     )
+sleeveSeed = softHalf(
+  width = sleeveWidth,
+  depth = sleeveDepth,
+  height = sleeveHeight,
+  crown = 5mm,
+)
+leftSleeve = translate(
+  sleeveSeed,
+  x = -bodyWidth / 2 + sleeveWidth * 0.24,
+  y = -0.05mm,
+  z = 2mm,
+  global = true,
+)
+rightSleeve = clone(leftSleeve)
+  |> translate(
+       x = bodyWidth - (sleeveWidth * 0.48),
+       y = 0mm,
+       z = 0mm,
+       global = true,
+     )
+innerWidth = bodyWidth - (2 * wallThickness)
+innerDepth = bodyDepth - (2 * wallThickness)
+innerHeight = bodyHeight - (2 * wallThickness)
+innerHem = ovalHalf(width = innerWidth * 0.92, depth = innerDepth * 0.95, elevation = -innerHeight / 2)
+innerBelly = ovalHalf(width = innerWidth, depth = innerDepth, elevation = -innerHeight * 0.30)
+innerChest = ovalHalf(width = innerWidth * 0.88, depth = innerDepth * 0.94, elevation = innerHeight * 0.05)
+innerShoulders = ovalHalf(width = innerWidth * 0.67, depth = innerDepth * 0.76, elevation = innerHeight * 0.37)
+innerCollar = ovalHalf(width = neckDiameter - (2 * wallThickness), depth = neckDiameter - (2 * wallThickness), elevation = innerHeight / 2)
+cavity = loft(
+  [
+    innerHem,
+    innerBelly,
+    innerChest,
+    innerShoulders,
+    innerCollar
+  ],
+  vDegree = 2,
+)
+  |> translate(
+       x = 0mm,
+       y = 0.1mm,
+       z = 0mm,
+       global = true,
+     )
+hollowTorso = subtract(torso, tools = [cavity])
+sleeved = union([hollowTorso, leftSleeve, rightSleeve])
+leftLegged = union([sleeved, leftLeg])
+legged = union([leftLegged, rightLeg])
+bodyEnvelope = union([legged, neck])

@@ -1,0 +1,11 @@
+title = "MITO_Desk_Companion_V1"
+default_file = "main.kcl"
+
+[settings.app]
+[settings.meta]
+id = "97570aa4-67b8-4859-bb93-aae11d353669"
+
+[settings.modeling]
+
+[cloud."zoo.dev"]
+project_id = "861ab5c4-15dc-4c6f-a301-3266c468a20d"

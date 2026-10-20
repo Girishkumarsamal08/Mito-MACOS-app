@@ -1,0 +1,28 @@
+CompileFlags:
+  Add:
+    - "-xc++"
+    - "-std=gnu++17"
+    - "-DARDUINO=10812"
+    - "-DESP32=1"
+    - "-DCONFIG_IDF_TARGET_ESP32S3=1"
+    - "-I/Users/girishkumarsamal/Downloads/MITO app/mito-desk-companion-v1/firmware/include"
+    - "-I/Users/girishkumarsamal/Downloads/MITO app/mito-desk-companion-v1/firmware/src"
+    - "-I/Users/girishkumarsamal/Downloads/MITO app/HARDWARE/ESP32_MITO"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/hardware/esp32/3.3.12/cores/esp32"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/hardware/esp32/3.3.12/variants/esp32s3"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/hardware/esp32/3.3.12/libraries/WiFi/src"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/hardware/esp32/3.3.12/libraries/SPI/src"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/esp_driver_i2s/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/freertos/FreeRTOS-Kernel/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/freertos/esp_additions/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/esp_system/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/esp_common/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/esp_hw_support/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/hal/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/soc/include"
+    - "-isystem/Users/girishkumarsamal/Library/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.12/include/soc/esp32s3/include"
+
+Diagnostics:
+  UnusedIncludes: None
+  Suppress:
+    - "pp_file_not_found"

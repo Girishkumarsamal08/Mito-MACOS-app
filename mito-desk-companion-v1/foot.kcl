@@ -1,0 +1,15 @@
+// MITO foot
+// Flat-soled curved foot and integral ankle locating stem.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import footWidth, footDepth, footHeight, assemblyClearance from "parameters.kcl"
+import ovalSection, cylinder from "features.kcl"
+sole = ovalSection(width = footWidth, depth = footDepth, elevation = 0mm)
+soleRim = ovalSection(width = footWidth, depth = footDepth, elevation = 1.5mm)
+toe = ovalSection(width = footWidth * 0.88, depth = footDepth * 0.87, elevation = footHeight * 0.40)
+ankle = ovalSection(width = footWidth * 0.60, depth = footDepth * 0.48, elevation = footHeight * 0.78)
+ankleTop = ovalSection(width = footWidth * 0.58, depth = footDepth * 0.46, elevation = footHeight)
+footBlank = loft([sole, soleRim, toe, ankle, ankleTop], vDegree = 3)
+stem = cylinder(diameter = footWidth * 0.40, length = 4mm, plane = offsetPlane(XY, offset = footHeight - 1mm))
+foot = union([footBlank, stem])
+  |> appearance(color = "#E7C28B", roughness = 25)

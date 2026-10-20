@@ -1,0 +1,29 @@
+// MITO body back
+// Rear hoodie shell with two true mounting holes aligned to the backpack.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import "bodyShell.kcl" as bodyShell
+import bodyDepth, backHoleDiameter, backHoleSpacing from "parameters.kcl"
+import cylinder from "features.kcl"
+rearBlank = rotate(
+  bodyShell,
+  axis = Z,
+  angle = 180deg,
+  global = true,
+)
+leftBore = cylinder(diameter = backHoleDiameter, length = bodyDepth, plane = -XZ)
+  |> translate(
+       x = -backHoleSpacing / 2,
+       y = 0mm,
+       z = -8mm,
+       global = true,
+     )
+rightBore = clone(leftBore)
+  |> translate(
+       x = backHoleSpacing,
+       y = 0mm,
+       z = 0mm,
+       global = true,
+     )
+bodyBack = subtract(rearBlank, tools = [leftBore, rightBore])
+  |> appearance(color = "#E8E8E2", roughness = 25)

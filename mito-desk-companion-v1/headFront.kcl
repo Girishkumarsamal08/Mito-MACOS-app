@@ -1,0 +1,34 @@
+// MITO head front
+// Hollow pear-shaped hood with a true face aperture.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import headWidth, headHeight, headDepth, faceOpeningWidth, faceOpeningHeight, faceOpeningDepth, faceCornerRadius, wallThickness, assemblyClearance, neckDiameter, topMountDiameter, topMountHeight, topMountHoleDiameter from "parameters.kcl"
+import softVolume, roundRect, halfSpace, cylinder from "features.kcl"
+outer = softVolume(
+  width = headWidth,
+  depth = headDepth,
+  height = headHeight,
+  crown = topMountDiameter,
+)
+inner = softVolume(
+  width = headWidth - (2 * wallThickness),
+  depth = headDepth - (2 * wallThickness),
+  height = headHeight - (2 * wallThickness),
+  crown = topMountDiameter - wallThickness,
+)
+mount = cylinder(diameter = topMountDiameter, length = topMountHeight + wallThickness, plane = offsetPlane(XY, offset = headHeight / 2 - wallThickness))
+mountedOuter = union([outer, mount])
+neckSocket = cylinder(diameter = neckDiameter, length = 8mm, plane = offsetPlane(XY, offset = -headHeight / 2 - 1mm))
+mountBore = cylinder(diameter = topMountHoleDiameter, length = topMountHeight + 3 * wallThickness, plane = offsetPlane(XY, offset = headHeight / 2 - (2 * wallThickness)))
+hollow = subtract(mountedOuter, tools = [inner, neckSocket, mountBore])
+frontTool = halfSpace(front = true, gap = assemblyClearance, size = headWidth * 2)
+frontBlank = intersect([hollow, frontTool])
+apertureProfile = roundRect(
+  width = faceOpeningWidth,
+  height = faceOpeningHeight,
+  cornerRadius = faceCornerRadius,
+  plane = offsetPlane(XZ, offset = faceOpeningDepth),
+)
+apertureTool = extrude(apertureProfile, length = headDepth)
+headFront = subtract(frontBlank, tools = [apertureTool])
+  |> appearance(color = "#F2F1EC", roughness = 25)

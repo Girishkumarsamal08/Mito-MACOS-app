@@ -1,0 +1,24 @@
+// MITO hand
+// Rounded palm loft with a small rear locating stem.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import handWidth, handDepth, handHeight, handPegDiameter from "parameters.kcl"
+import ovalSection, cylinder from "features.kcl"
+palmTip = ovalSection(width = 1mm, depth = 1mm, elevation = -handHeight / 2)
+palmRound = ovalSection(width = handWidth * 0.80, depth = handDepth * 0.80, elevation = -handHeight * 0.38)
+palmWide = ovalSection(width = handWidth, depth = handDepth, elevation = -handHeight * 0.10)
+palmUpper = ovalSection(width = handWidth * 0.80, depth = handDepth * 0.80, elevation = handHeight * 0.25)
+cuff = ovalSection(width = handWidth * 0.50, depth = handDepth * 0.50, elevation = handHeight / 2)
+mitten = loft(
+  [
+    palmTip,
+    palmRound,
+    palmWide,
+    palmUpper,
+    cuff
+  ],
+  vDegree = 2,
+)
+stem = cylinder(diameter = handPegDiameter, length = 4mm, plane = offsetPlane(XY, offset = handHeight / 2 - 1mm))
+hand = union([mitten, stem])
+  |> appearance(color = "#E7C28B", roughness = 25)

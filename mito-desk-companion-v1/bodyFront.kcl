@@ -1,0 +1,33 @@
+// MITO body front
+// Hollow front hoodie, integrated sleeves, hand recesses and chest-button seat.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import "bodyShell.kcl" as bodyShell
+import assemblyClearance, buttonDiameter, bodyDepth, handPegDiameter, handMountSpacing, handCenterZ from "parameters.kcl"
+import cylinder from "features.kcl"
+workingShell = rotate(
+  clone(bodyShell),
+  axis = Z,
+  angle = 180deg,
+  global = true,
+)
+handClearance = cylinder(diameter = handPegDiameter + 2 * assemblyClearance, length = bodyDepth, plane = -XZ)
+leftHandTool = clone(handClearance)
+  |> translate(
+       x = -handMountSpacing / 2,
+       y = 0mm,
+       z = handCenterZ,
+       global = true,
+     )
+rightHandTool = translate(
+  handClearance,
+  x = handMountSpacing / 2,
+  y = 0mm,
+  z = handCenterZ,
+  global = true,
+)
+frontBlank = subtract(workingShell, tools = [leftHandTool, rightHandTool])
+buttonBore = cylinder(diameter = buttonDiameter * 0.50 + 2 * assemblyClearance, length = bodyDepth, plane = -XZ)
+bodyFront = subtract(frontBlank, tools = [buttonBore])
+  |> rotate(axis = Z, angle = 180deg, global = true)
+  |> appearance(color = "#F2F1EC", roughness = 25)

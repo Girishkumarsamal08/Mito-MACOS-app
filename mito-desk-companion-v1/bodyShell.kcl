@@ -1,0 +1,32 @@
+// MITO hollow torso master
+// Neck and ankle sockets in the already hollow front half.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import "bodyEnvelope.kcl" as bodyEnvelope
+import bodyHeight, wallThickness, neckDiameter, bodyCenterZ, footHeight, footWidth, footSpacing, assemblyClearance from "parameters.kcl"
+import cylinder, ovalHalf from "features.kcl"
+neckProfile = ovalHalf(width = neckDiameter - (2 * wallThickness) - assemblyClearance, depth = neckDiameter - (2 * wallThickness) - assemblyClearance, elevation = bodyHeight / 2 - 5mm)
+neckBore = extrude(neckProfile, length = 12mm)
+  |> translate(
+       x = 0mm,
+       y = 0.1mm,
+       z = 0mm,
+       global = true,
+     )
+neckOpened = subtract(bodyEnvelope, tools = [neckBore])
+ankleProfile = ovalHalf(width = footWidth * 0.40 + 2 * assemblyClearance, depth = footWidth * 0.40 + 2 * assemblyClearance, elevation = footHeight - bodyCenterZ - 1mm)
+leftAnkleTool = extrude(ankleProfile, length = 5mm)
+  |> translate(
+       x = -footSpacing / 2,
+       y = 0.1mm,
+       z = 0mm,
+       global = true,
+     )
+rightAnkleTool = clone(leftAnkleTool)
+  |> translate(
+       x = footSpacing,
+       y = 0mm,
+       z = 0mm,
+       global = true,
+     )
+bodyShell = subtract(neckOpened, tools = [leftAnkleTool, rightAnkleTool])

@@ -1,0 +1,10 @@
+// MITO chest button
+// Separate rounded circular cap and locating stem; no electronics.
+@settings(defaultLengthUnit = mm, kclVersion = 2.0)
+
+import buttonDiameter, buttonProjection from "parameters.kcl"
+import cylinder from "features.kcl"
+cap = cylinder(diameter = buttonDiameter, length = buttonProjection, plane = XZ)
+stem = cylinder(diameter = buttonDiameter * 0.50, length = -4mm, plane = offsetPlane(XZ, offset = 1mm))
+button = union([cap, stem])
+  |> appearance(color = "#E7C28B", roughness = 20)

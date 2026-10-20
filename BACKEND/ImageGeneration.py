@@ -16,7 +16,7 @@ def open_images(prompt):
 
     for jpg_file in Files:
         image_path = os.path.join(folder_path, jpg_file)
-        if not os.path.exists(image_path):  # Ensure file exists
+        if not os.path.exists(image_path):  
             print(f"File not found: {image_path}")
             continue
         try:

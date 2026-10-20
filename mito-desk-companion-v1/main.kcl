@@ -1,0 +1,91 @@
+// MITO parametric foundation
+// Photo-led multi-part assembly; provisional dimensions are in parameters.kcl.
+@settings(kclVersion = 2.0, defaultLengthUnit = mm)
+
+import "headFront.kcl" as headFrontPart
+import "headBack.kcl" as headBackPart
+import "bodyFront.kcl" as bodyFrontPart
+import "bodyBack.kcl" as bodyBackPart
+import "hand.kcl" as handPart
+import "foot.kcl" as footPart
+import "backpack.kcl" as backpackPart
+import "button.kcl" as buttonPart
+import headCenterZ, bodyCenterZ, bodyDepth, assemblyClearance, footSpacing, handMountSpacing, handCenterY, handCenterZ from "parameters.kcl"
+headFront = translate(
+  headFrontPart,
+  x = 0mm,
+  y = 0mm,
+  z = headCenterZ,
+  global = true,
+)
+headBack = translate(
+  headBackPart,
+  x = 0mm,
+  y = 0mm,
+  z = headCenterZ,
+  global = true,
+)
+bodyFront = translate(
+  bodyFrontPart,
+  x = 0mm,
+  y = -assemblyClearance / 2,
+  z = bodyCenterZ,
+  global = true,
+)
+bodyBack = translate(
+  bodyBackPart,
+  x = 0mm,
+  y = assemblyClearance / 2,
+  z = bodyCenterZ,
+  global = true,
+)
+leftHand = clone(handPart)
+  |> rotate(axis = X, angle = -90deg, global = true)
+  |> rotate(axis = Y, angle = -25deg, global = true)
+  |> translate(
+       x = -handMountSpacing / 2,
+       y = handCenterY,
+       z = bodyCenterZ + handCenterZ,
+       global = true,
+     )
+rightHand = rotate(
+  handPart,
+  axis = X,
+  angle = -90deg,
+  global = true,
+)
+  |> rotate(axis = Y, angle = 25deg, global = true)
+  |> translate(
+       x = handMountSpacing / 2,
+       y = handCenterY,
+       z = bodyCenterZ + handCenterZ,
+       global = true,
+     )
+leftFoot = clone(footPart)
+  |> translate(
+       x = -footSpacing / 2,
+       y = 0mm,
+       z = 0mm,
+       global = true,
+     )
+rightFoot = translate(
+  footPart,
+  x = footSpacing / 2,
+  y = 0mm,
+  z = 0mm,
+  global = true,
+)
+backpack = translate(
+  backpackPart,
+  x = 0mm,
+  y = bodyDepth / 2 + assemblyClearance,
+  z = bodyCenterZ,
+  global = true,
+)
+chestButton = translate(
+  buttonPart,
+  x = 0mm,
+  y = -bodyDepth / 2 - assemblyClearance,
+  z = bodyCenterZ,
+  global = true,
+)
